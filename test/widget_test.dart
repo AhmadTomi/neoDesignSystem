@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:neo_color_picker/neo_color_picker.dart';
-import 'package:design_system_lite/main.dart';
+import 'package:neo_design_system/main.dart';
+import 'package:neo_design_system/neo_design_system.dart';
 
 void main() {
   group('OKLCH Math & Conversion Tests', () {
@@ -395,6 +396,179 @@ void main() {
       await tester.tap(find.text('Close'));
       await tester.pumpAndSettle();
       expect(find.text('Dialog Surface (Container 4)'), findsNothing);
+
+      // Verify Save / Export Toolbar Button opens modal without MaterialLocalizations error
+      await tester.tap(find.byTooltip('Simpan / Ekspor Preset JSON'));
+      await tester.pumpAndSettle();
+      expect(find.text('Save & Export Theme Preset'), findsOneWidget);
+      await tester.tap(find.descendant(of: find.byType(Dialog), matching: find.byIcon(Icons.close)));
+      await tester.pumpAndSettle();
+      expect(find.text('Save & Export Theme Preset'), findsNothing);
+
+      // Verify Import Toolbar Button opens modal without MaterialLocalizations error
+      await tester.tap(find.byTooltip('Impor Preset JSON'));
+      await tester.pumpAndSettle();
+      expect(find.text('Import Theme Preset JSON'), findsOneWidget);
+      await tester.tap(find.text('Batal'));
+      await tester.pumpAndSettle();
+      expect(find.text('Import Theme Preset JSON'), findsNothing);
+    });
+  });
+
+  group('AppRadiusTheme Tests', () {
+    test('Rounded preset directional properties and concentric nesting', () {
+      final radius = AppRadiusTheme.rounded();
+      expect(radius.xs.all, BorderRadius.circular(4));
+      expect(radius.sm.all, BorderRadius.circular(8));
+      expect(radius.md.all, BorderRadius.circular(12));
+      expect(radius.lg.all, BorderRadius.circular(16));
+      expect(radius.xl.all, BorderRadius.circular(24));
+      expect(radius.full.all, BorderRadius.circular(9999));
+
+      // Directional
+      expect(radius.md.top, const BorderRadius.vertical(top: Radius.circular(12)));
+      expect(radius.md.bottom, const BorderRadius.vertical(bottom: Radius.circular(12)));
+      expect(radius.md.left, const BorderRadius.horizontal(left: Radius.circular(12)));
+      expect(radius.md.right, const BorderRadius.horizontal(right: Radius.circular(12)));
+
+      // Concentric nesting: R_inner = max(0, R_outer - padding)
+      expect(radius.nested(outer: radius.xl, padding: 8).value, 16.0);
+    });
+
+    test('Sharp preset zero curvature', () {
+      final sharp = AppRadiusTheme.sharp();
+      expect(sharp.xs.value, 0.0);
+      expect(sharp.sm.value, 0.0);
+      expect(sharp.md.value, 0.0);
+      expect(sharp.lg.value, 0.0);
+      expect(sharp.xl.value, 0.0);
+      expect(sharp.full.value, 0.0);
+    });
+  });
+
+  group('AppSpacingTheme Tests', () {
+    test('Comfortable density insets, gaps, and SizedBox helpers', () {
+      final spacing = AppSpacingTheme.comfortable();
+      expect(spacing.insetSm, const EdgeInsets.all(8));
+      expect(spacing.insetMd, const EdgeInsets.all(16));
+      expect(spacing.insetLg, const EdgeInsets.all(24));
+      expect(spacing.vGapSm.height, 12.0);
+      expect(spacing.hGapMd.width, 16.0);
+      expect(spacing.touchTargetMin, 48.0);
+    });
+
+    test('Compact density pure dense without touch target limits', () {
+      final compact = AppSpacingTheme.compact();
+      expect(compact.insetSm, const EdgeInsets.all(4));
+      expect(compact.insetMd, const EdgeInsets.all(10));
+      expect(compact.vGapSm.height, 6.0);
+      expect(compact.touchTargetMin, 0.0); // Pure dense!
+    });
+  });
+
+  group('SingleFontFeaturesX Typography Tests', () {
+    test('OpenType tabular and slashed zero chaining', () {
+      const style = TextStyle(fontSize: 14);
+      final tabularStyle = style.tabular;
+      expect(tabularStyle?.fontFeatures, contains(const FontFeature.tabularFigures()));
+
+      final slashedStyle = style.slashZero;
+      expect(slashedStyle?.fontFeatures, contains(const FontFeature.slashedZero()));
+
+      final combinedStyle = style.tabular.slashZero;
+      expect(combinedStyle?.fontFeatures, contains(const FontFeature.tabularFigures()));
+      expect(combinedStyle?.fontFeatures, contains(const FontFeature.slashedZero()));
+    });
+  });
+
+  group('ThemePreset and AppThemeController Tests', () {
+    test('Built-in presets exist and generate valid ThemeData', () {
+      expect(BuiltInPresets.all.length, greaterThanOrEqualTo(4));
+      final slate = BuiltInPresets.slate;
+      final theme = slate.toThemeData(isDark: false);
+      expect(theme.scaffoldBackgroundColor, isNotNull);
+      expect(theme.extension<AppColorTheme>(), isNotNull);
+      expect(theme.extension<AppRadiusTheme>(), isNotNull);
+      expect(theme.extension<AppSpacingTheme>(), isNotNull);
+    });
+
+    test('ThemeModifier allows modifying ThemeData using all tokens', () {
+      final customPreset = ThemePreset(
+        id: 'test_custom',
+        name: 'Custom With Modifier',
+        lightAnchor: const Color(0xFFF4F5F7),
+        darkAnchor: const Color(0xFF101010),
+        primaryColor: const Color(0xFF3B82F6),
+        themeModifier: (baseTheme, tokens) {
+          // Verify tokens provides direct access to all active token instances
+          expect(tokens.color, isNotNull);
+          expect(tokens.radius, isNotNull);
+          expect(tokens.spacing, isNotNull);
+          expect(tokens.typography, isNotNull);
+          return baseTheme.copyWith(
+            appBarTheme: AppBarTheme(
+              backgroundColor: tokens.color.container2,
+              elevation: 0,
+            ),
+          );
+        },
+      );
+
+      final theme = customPreset.toThemeData(isDark: false);
+      expect(theme.appBarTheme.elevation, 0);
+    });
+
+    test('ThemeConfig JSON serialization and deserialization', () {
+      final originalConfig = ThemeConfig(
+        id: 'emerald',
+        name: 'Emerald City',
+        lightAnchorHex: '#F0FDF4',
+        darkAnchorHex: '#052E16',
+        primaryHex: '#10B981',
+        shape: 'rounded',
+        density: 'comfortable',
+      );
+
+      final jsonMap = originalConfig.toJson();
+      final restoredConfig = ThemeConfig.fromJson(jsonMap);
+
+      expect(restoredConfig.id, originalConfig.id);
+      expect(restoredConfig.name, originalConfig.name);
+      expect(restoredConfig.lightAnchorHex, originalConfig.lightAnchorHex);
+      expect(restoredConfig.darkAnchorHex, originalConfig.darkAnchorHex);
+      expect(restoredConfig.primaryHex, originalConfig.primaryHex);
+      expect(restoredConfig.shape, 'rounded');
+      expect(restoredConfig.density, 'comfortable');
+
+      final preset = restoredConfig.toPreset();
+      expect(preset.name, 'Emerald City');
+      expect(preset.primaryColor, const Color(0xFF10B981));
+    });
+
+    test('AppThemeController state switching and custom preset adding', () {
+      final controller = AppThemeController();
+      expect(controller.currentPreset.id, BuiltInPresets.slate.id);
+      expect(controller.density, DensityPreset.comfortable);
+      expect(controller.shape, ShapePreset.rounded);
+
+      controller.setPreset(BuiltInPresets.emerald);
+      expect(controller.currentPreset.id, BuiltInPresets.emerald.id);
+
+      controller.setDensity(DensityPreset.compact);
+      expect(controller.density, DensityPreset.compact);
+
+      controller.setShape(ShapePreset.sharp);
+      expect(controller.shape, ShapePreset.sharp);
+
+      // Export to JSON string
+      final jsonStr = controller.exportCurrentPresetAsJson();
+      expect(jsonStr, contains('"id": "emerald_enterprise"'));
+      expect(jsonStr, contains('"density": "compact"'));
+      expect(jsonStr, contains('"shape": "sharp"'));
+
+      // Import from JSON string
+      final imported = controller.importPresetFromJson(jsonStr);
+      expect(imported.id, BuiltInPresets.emerald.id);
     });
   });
 }

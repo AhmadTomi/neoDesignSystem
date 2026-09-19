@@ -1,1183 +1,10 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:neo_color_picker/neo_color_picker.dart';
+import 'package:neo_design_system/neo_design_system.dart';
 
 void main() {
   runApp(const OklchPaletteDemoApp());
-}
-
-/// Helper class for converting OKLCH color coordinates to Flutter [Color].
-///
-/// Formula pipeline:
-/// OKLCH (L, C, H) -> OKLab (L, a, b) -> Linear LMS -> Linear sRGB -> Standard sRGB (Color)
-class OklchColor {
-  /// Perceptual lightness in the range [0.0, 1.0].
-  final double l;
-
-  /// Chroma (color intensity / saturation), >= 0.0.
-  final double c;
-
-  /// Hue angle in degrees in the range [0.0, 360.0).
-  final double h;
-
-  const OklchColor(this.l, this.c, this.h);
-
-  /// Converts OKLCH to a Flutter [Color] with the given [alpha] (0.0 to 1.0).
-  Color toColor({double alpha = 1.0}) {
-    // 1. OKLCH to OKLab
-    final hRad = h * (math.pi / 180.0);
-    final a = c * math.cos(hRad);
-    final b = c * math.sin(hRad);
-
-    // 2. OKLab to non-linear LMS
-    final l_ = l + 0.3963377774 * a + 0.2158037573 * b;
-    final m_ = l - 0.1055613458 * a - 0.0638541728 * b;
-    final s_ = l - 0.0894841775 * a - 1.2914855480 * b;
-
-    // Cube to obtain linear LMS
-    final lLin = l_ * l_ * l_;
-    final mLin = m_ * m_ * m_;
-    final sLin = s_ * s_ * s_;
-
-    // 3. Linear LMS to Linear sRGB (Björn Ottosson inverse matrix)
-    final rLin =
-        4.0767416621 * lLin - 3.3077115913 * mLin + 0.2309699292 * sLin;
-    final gLin =
-        -1.2684380046 * lLin + 2.6097574011 * mLin - 0.3413193965 * sLin;
-    final bLin =
-        -0.0041960863 * lLin - 0.7034186147 * mLin + 1.7076147010 * sLin;
-
-    // 4. Linear sRGB to standard sRGB (gamma transfer function)
-    final rSrgb = _linearToSrgb(rLin);
-    final gSrgb = _linearToSrgb(gLin);
-    final bSrgb = _linearToSrgb(bLin);
-
-    // Quantize to 8-bit channels [0..255]
-    final rInt = (rSrgb * 255.0).round().clamp(0, 255);
-    final gInt = (gSrgb * 255.0).round().clamp(0, 255);
-    final bInt = (bSrgb * 255.0).round().clamp(0, 255);
-    final aInt = (alpha * 255.0).round().clamp(0, 255);
-
-    return Color.fromARGB(aInt, rInt, gInt, bInt);
-  }
-
-  /// Converts a standard Flutter [Color] into [OklchColor].
-  factory OklchColor.fromColor(Color color) {
-    // 1. sRGB [0..1] to Linear sRGB (gamma decode)
-    final r = _srgbToLinear(color.r);
-    final g = _srgbToLinear(color.g);
-    final b = _srgbToLinear(color.b);
-
-    // 2. Linear sRGB to Linear LMS (Björn Ottosson matrix)
-    final lLin = 0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b;
-    final mLin = 0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b;
-    final sLin = 0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b;
-
-    // 3. Non-linear LMS (cube root)
-    final l_ = _cbrt(lLin);
-    final m_ = _cbrt(mLin);
-    final s_ = _cbrt(sLin);
-
-    // 4. LMS to OKLab (L, a, b)
-    final lVal = 0.2104542553 * l_ + 0.7936177850 * m_ - 0.0040720468 * s_;
-    final aVal = 1.9779984951 * l_ - 2.4285922050 * m_ + 0.4505937099 * s_;
-    final bVal = 0.0259040371 * l_ + 0.7827717662 * m_ - 0.8086757660 * s_;
-
-    // 5. OKLab to OKLCH (L, C, H)
-    final cVal = math.sqrt(aVal * aVal + bVal * bVal);
-    var hRad = math.atan2(bVal, aVal);
-    var hDeg = hRad * (180.0 / math.pi);
-    if (hDeg < 0.0) hDeg += 360.0;
-
-    return OklchColor(lVal.clamp(0.0, 1.0), math.max(0.0, cVal), hDeg % 360.0);
-  }
-
-  static double _cbrt(double x) {
-    if (x > 0.0) return math.pow(x, 1.0 / 3.0).toDouble();
-    if (x < 0.0) return -math.pow(-x, 1.0 / 3.0).toDouble();
-    return 0.0;
-  }
-
-  static double _srgbToLinear(double val) {
-    final clamped = val.clamp(0.0, 1.0);
-    if (clamped <= 0.04045) {
-      return clamped / 12.92;
-    } else {
-      return math.pow((clamped + 0.055) / 1.055, 2.4).toDouble();
-    }
-  }
-
-  /// Standard IEC 61966-2-1 sRGB gamma transfer function.
-  static double _linearToSrgb(double value) {
-    final clamped = value.clamp(0.0, 1.0);
-    if (clamped <= 0.0031308) {
-      return 12.92 * clamped;
-    } else {
-      return 1.055 * math.pow(clamped, 1.0 / 2.4) - 0.055;
-    }
-  }
-
-  /// Returns 6-character hex string (e.g. #3B82F6).
-  String get hexCode {
-    final color = toColor();
-    final r = (color.r * 255).round().toRadixString(16).padLeft(2, '0');
-    final g = (color.g * 255).round().toRadixString(16).padLeft(2, '0');
-    final b = (color.b * 255).round().toRadixString(16).padLeft(2, '0');
-    return '#$r$g$b'.toUpperCase();
-  }
-}
-
-/// Metadata information for individual layers for display & inspection.
-class LayerSpec {
-  final String id;
-  final String label;
-  final String role;
-  final double l;
-  final double c;
-  final Color color;
-  final String hex;
-  final String formula;
-
-  const LayerSpec({
-    required this.id,
-    required this.label,
-    required this.role,
-    required this.l,
-    required this.c,
-    required this.color,
-    required this.hex,
-    required this.formula,
-  });
-}
-
-/// Custom [ThemeExtension] implementing a tiered color system anchored at Container 3.
-class LayerPalette extends ThemeExtension<LayerPalette> {
-  /// Background utama kanvas
-  final Color container1;
-
-  /// Card penampung lapis kedua
-  final Color container2;
-
-  /// Permukaan acuan utama lapis ketiga (Anchor)
-  final Color container3;
-
-  /// Warna isian TextField dengan efek cekung/trough
-  final Color textFieldFill;
-
-  /// Lapis teratas mengambang (Dialog, Context Menu, dan Popover Surface)
-  final Color container4;
-
-  /// Warna teks berdaya kontras tinggi
-  final Color textMain;
-
-  /// Warna isian Tonal Button (kontras & harmonis di atas Container 3 dan Container 4)
-  final Color tonalButtonFill;
-
-  /// Warna teks/ikon Tonal Button berdaya kontras tinggi
-  final Color tonalButtonText;
-
-  /// Garis pemisah tipis dengan kontras rendah
-  final Color dividerLine;
-
-  /// Garis tepi fisik tipis (1px) untuk menegaskan lekukan cekung sebelum elemen disentuh
-  final Color textFieldBorder;
-
-  /// Warna isian TextField nonaktif (disamakan persis dengan Container 3 agar efek cekung hilang dan tampak rata)
-  final Color textFieldDisabledFill;
-
-  /// Garis tepi sangat redup agar batas fisik tetap ada secara samar tanpa mengundang interaksi
-  final Color textFieldDisabledBorder;
-
-  /// Standar kontras WCAG untuk menandakan status teks/ikon non-interaktif
-  final Color textDisabled;
-
-  /// Warna aksen utama (Primary Brand) untuk tombol utama, focused border, dan aksen aktif
-  final Color primary;
-
-  /// Warna teks/ikon dengan kontras tinggi di atas permukaan [primary]
-  final Color onPrimary;
-
-  /// Warna status sukses (Success) untuk badge konfirmasi, alert sukses, dll.
-  final Color success;
-  final Color onSuccess;
-
-  /// Warna status peringatan (Warning) untuk alert perhatian, banner hati-hati, dll.
-  final Color warning;
-  final Color onWarning;
-
-  /// Warna status kesalahan (Error) untuk error border, error text, alert bahaya, dll.
-  final Color error;
-  final Color onError;
-
-  /// Warna status informasi (Info) untuk badge edukatif, popover tips, dll.
-  final Color info;
-  final Color onInfo;
-
-  // Metadata parameters for UI transparency & inspection
-  final double anchorL;
-  final double chroma;
-  final double hue;
-  final bool isDark;
-
-  // Layer specifications for the inspector
-  final List<LayerSpec> specs;
-
-  const LayerPalette({
-    required this.container1,
-    required this.container2,
-    required this.container3,
-    required this.textFieldFill,
-    required this.container4,
-    required this.textMain,
-    required this.tonalButtonFill,
-    required this.tonalButtonText,
-    required this.dividerLine,
-    required this.textFieldBorder,
-    required this.textFieldDisabledFill,
-    required this.textFieldDisabledBorder,
-    required this.textDisabled,
-    required this.primary,
-    required this.onPrimary,
-    required this.success,
-    required this.onSuccess,
-    required this.warning,
-    required this.onWarning,
-    required this.error,
-    required this.onError,
-    required this.info,
-    required this.onInfo,
-    this.anchorL = 0.0,
-    this.chroma = 0.0,
-    this.hue = 0.0,
-    this.isDark = false,
-    this.specs = const [],
-  });
-
-  /// Factory constructor that calculates tiered colors relative to Container 3 (anchorL).
-  factory LayerPalette.fromAnchor({
-    required double anchorL,
-    required double c,
-    required double h,
-    required bool isDark,
-    Color? primaryColor,
-    Color? successColor,
-    Color? warningColor,
-    Color? errorColor,
-    Color? infoColor,
-    double? c2Delta,
-    double? troughDelta,
-  }) {
-    // Delta antara Container 2 dan Container 3 dibuat rapat, halus & harmonis:
-    // Light Mode: 0.018 (sebelumnya 0.030)
-    // Dark Mode: 0.022 (sebelumnya 0.050)
-    final effectiveC2Delta = c2Delta ?? (isDark ? 0.022 : 0.018);
-    final effectiveTroughDelta = troughDelta ?? (isDark ? 0.018 : 0.030);
-
-    // Derivasi Primary & Semantic Status Color berbasis OKLCH
-    final effectivePrimary = primaryColor ?? const Color(0xFF2563EB);
-    final oklchP = OklchColor.fromColor(effectivePrimary);
-
-    final effectiveSuccess = successColor ?? const Color(0xFF10B981);
-    final oklchSuc = OklchColor.fromColor(effectiveSuccess);
-
-    final effectiveWarning = warningColor ?? const Color(0xFFF59E0B);
-    final oklchWar = OklchColor.fromColor(effectiveWarning);
-
-    final effectiveError = errorColor ?? const Color(0xFFEF4444);
-    final oklchErr = OklchColor.fromColor(effectiveError);
-
-    final effectiveInfo = infoColor ?? const Color(0xFF06B6D4);
-    final oklchInf = OklchColor.fromColor(effectiveInfo);
-
-    if (!isDark) {
-      // ----------------- Light Mode Formulas -----------------
-      // container1: anchorL + (effectiveC2Delta * 2.0) (clamp max 0.99), chroma: c * 0.70
-      final l1 = (anchorL + effectiveC2Delta * 2.0).clamp(0.0, 0.99);
-      final c1 = c * 0.70;
-      final oklch1 = OklchColor(l1, c1, h);
-
-      // container2: anchorL + effectiveC2Delta (dekat & harmonis dengan C3), chroma: c * 0.90
-      final l2 = (anchorL + effectiveC2Delta).clamp(0.0, 1.0);
-      final c2 = c * 0.90;
-      final oklch2 = OklchColor(l2, c2, h);
-
-      // container3: anchorL, chroma: c (Primary Anchor)
-      final l3 = anchorL.clamp(0.0, 1.0);
-      final c3 = c;
-      final oklch3 = OklchColor(l3, c3, h);
-
-      // textFieldFill: anchorL - effectiveTroughDelta (efek cekung/trough lebih gelap dari C3), chroma: c * 1.2
-      final lField = (anchorL - effectiveTroughDelta).clamp(0.0, 1.0);
-      final cField = c * 1.2;
-      final oklchField = OklchColor(lField, cField, h);
-
-      // container4: anchorL + 0.010 (clamp max 0.985), chroma: c * 0.85 (Harmonis & lembut di atas C3)
-      final l4 = (anchorL + 0.010).clamp(0.0, 0.985);
-      final c4 = c * 0.85;
-      final oklch4 = OklchColor(l4, c4, h);
-
-      // textMain: L = 0.20, chroma: 0.03
-      final lText = 0.20;
-      final cText = 0.03;
-      final oklchText = OklchColor(lText, cText, h);
-
-      // tonalButtonFill: (anchorL - 0.055).clamp(0.0, 1.0)
-      final lTbf = (anchorL - 0.055).clamp(0.0, 1.0);
-      final cTbf = c > 0.001 ? math.max(c * 1.4, 0.018) : 0.0;
-      final oklchTbf = OklchColor(lTbf, cTbf, h);
-
-      // tonalButtonText: textMain (CR > 9:1 terhadap TBF)
-      final oklchTbt = oklchText;
-
-      // 1. Divider Line: oklch(clamp(0.0, L_c3 - 0.05, 1.0) (C * 0.5) H)
-      final lDivider = (anchorL - 0.05).clamp(0.0, 1.0);
-      final cDivider = c * 0.5;
-      final oklchDivider = OklchColor(lDivider, cDivider, h);
-
-      // 2. Border TextField (Default/Unfocused): oklch(clamp(0.0, L_c3 - 0.10, 1.0) 0.02 H)
-      final lTfBorder = (anchorL - 0.10).clamp(0.0, 1.0);
-      const cTfBorder = 0.02;
-      final oklchTfBorder = OklchColor(lTfBorder, cTfBorder, h);
-
-      // Primary Color in Light Mode: Kalibrasi lightness agar kontras seimbang di atas kanvas terang
-      final lPri = oklchP.l.clamp(0.35, 0.65);
-      final oklchPri = OklchColor(lPri, oklchP.c, oklchP.h);
-      final colPrimary = oklchPri.toColor();
-      final colOnPrimary = lPri > 0.62 ? const Color(0xFF0F172A) : Colors.white;
-
-      // Semantic Status Colors in Light Mode
-      final lSuc = oklchSuc.l.clamp(0.35, 0.65);
-      final oklchSucDerived = OklchColor(lSuc, oklchSuc.c, oklchSuc.h);
-      final colSuccess = oklchSucDerived.toColor();
-      final colOnSuccess = lSuc > 0.62 ? const Color(0xFF0F172A) : Colors.white;
-
-      final lWar = oklchWar.l.clamp(0.40, 0.72);
-      final oklchWarDerived = OklchColor(lWar, oklchWar.c, oklchWar.h);
-      final colWarning = oklchWarDerived.toColor();
-      final colOnWarning = lWar > 0.62 ? const Color(0xFF0F172A) : Colors.white;
-
-      final lErr = oklchErr.l.clamp(0.35, 0.65);
-      final oklchErrDerived = OklchColor(lErr, oklchErr.c, oklchErr.h);
-      final colError = oklchErrDerived.toColor();
-      final colOnError = lErr > 0.62 ? const Color(0xFF0F172A) : Colors.white;
-
-      final lInf = oklchInf.l.clamp(0.35, 0.65);
-      final oklchInfDerived = OklchColor(lInf, oklchInf.c, oklchInf.h);
-      final colInfo = oklchInfDerived.toColor();
-      final colOnInfo = lInf > 0.62 ? const Color(0xFF0F172A) : Colors.white;
-
-      final col1 = oklch1.toColor();
-      final col2 = oklch2.toColor();
-      final col3 = oklch3.toColor();
-      final colField = oklchField.toColor();
-      final col4 = oklch4.toColor();
-      final colText = oklchText.toColor();
-      final colTbf = oklchTbf.toColor();
-      final colTbt = oklchTbt.toColor();
-      final colDivider = oklchDivider.toColor();
-      final colTfBorder = oklchTfBorder.toColor();
-
-      // 3. Disabled TextField Fill: Disamakan persis dengan Container 3 (L = L_c3, C, H)
-      final colTfDisabledFill = col3;
-
-      // 4. Disabled Border: textMain dengan alpha 0.08
-      final colTfDisabledBorder = colText.withValues(alpha: 0.08);
-
-      // 5. Disabled Text / Icon: textMain dengan alpha 0.38
-      final colTextDisabled = colText.withValues(alpha: 0.38);
-
-      final specs = [
-        LayerSpec(
-          id: 'C1',
-          label: 'Container 1',
-          role: 'Canvas Background',
-          l: l1,
-          c: c1,
-          color: col1,
-          hex: oklch1.hexCode,
-          formula:
-              'anchorL + ${(effectiveC2Delta * 2.0).toStringAsFixed(3)} (c * 0.70)',
-        ),
-        LayerSpec(
-          id: 'C2',
-          label: 'Container 2',
-          role: 'Card Wrapper',
-          l: l2,
-          c: c2,
-          color: col2,
-          hex: oklch2.hexCode,
-          formula:
-              'anchorL + ${effectiveC2Delta.toStringAsFixed(3)} (c * 0.90)',
-        ),
-        LayerSpec(
-          id: 'C3',
-          label: 'Container 3',
-          role: 'Anchor Surface',
-          l: l3,
-          c: c3,
-          color: col3,
-          hex: oklch3.hexCode,
-          formula: 'anchorL (c * 1.0)',
-        ),
-        LayerSpec(
-          id: 'TF',
-          label: 'TextField Fill',
-          role: 'Sunken Trough',
-          l: lField,
-          c: cField,
-          color: colField,
-          hex: oklchField.hexCode,
-          formula:
-              'anchorL - ${effectiveTroughDelta.toStringAsFixed(3)} (c * 1.2)',
-        ),
-        LayerSpec(
-          id: 'TFB',
-          label: 'TF Border',
-          role: 'Default Unfocused Outline',
-          l: lTfBorder,
-          c: cTfBorder,
-          color: colTfBorder,
-          hex: oklchTfBorder.hexCode,
-          formula: 'anchorL - 0.10 (c = 0.02)',
-        ),
-        LayerSpec(
-          id: 'TFD',
-          label: 'Disabled TF Fill',
-          role: 'Flat with C3 (no trough)',
-          l: l3,
-          c: c3,
-          color: colTfDisabledFill,
-          hex: oklch3.hexCode,
-          formula: 'L = anchorL, C = c (= C3)',
-        ),
-        LayerSpec(
-          id: 'DIV',
-          label: 'Divider Line',
-          role: 'Subtle Content Separator',
-          l: lDivider,
-          c: cDivider,
-          color: colDivider,
-          hex: oklchDivider.hexCode,
-          formula: 'anchorL - 0.05 (c * 0.5)',
-        ),
-        LayerSpec(
-          id: 'C4',
-          label: 'Container 4',
-          role: 'Dialog & Menu Surface',
-          l: l4,
-          c: c4,
-          color: col4,
-          hex: oklch4.hexCode,
-          formula: 'anchorL + 0.010 (c * 0.85)',
-        ),
-        LayerSpec(
-          id: 'TBF',
-          label: 'Tonal Button Fill',
-          role: 'Tonal Action Fill (C3 & C4)',
-          l: lTbf,
-          c: cTbf,
-          color: colTbf,
-          hex: oklchTbf.hexCode,
-          formula: 'anchorL - 0.055 (L = ${lTbf.toStringAsFixed(3)})',
-        ),
-        LayerSpec(
-          id: 'TBT',
-          label: 'Tonal Button Text',
-          role: 'Tonal Action Text',
-          l: lText,
-          c: cText,
-          color: colTbt,
-          hex: oklchTbt.hexCode,
-          formula: 'textMain (L = 0.20)',
-        ),
-        LayerSpec(
-          id: 'PRI',
-          label: 'Primary Accent',
-          role: 'Focus Border & Button',
-          l: lPri,
-          c: oklchP.c,
-          color: colPrimary,
-          hex: oklchPri.hexCode,
-          formula: 'L: ${lPri.toStringAsFixed(3)}, C: ${oklchP.c.toStringAsFixed(3)}',
-        ),
-        LayerSpec(
-          id: 'SUC',
-          label: 'Success Status',
-          role: 'Confirmations & Completed',
-          l: lSuc,
-          c: oklchSuc.c,
-          color: colSuccess,
-          hex: oklchSucDerived.hexCode,
-          formula: 'L: ${lSuc.toStringAsFixed(3)}, C: ${oklchSuc.c.toStringAsFixed(3)}',
-        ),
-        LayerSpec(
-          id: 'WAR',
-          label: 'Warning Status',
-          role: 'Cautions & Alerts',
-          l: lWar,
-          c: oklchWar.c,
-          color: colWarning,
-          hex: oklchWarDerived.hexCode,
-          formula: 'L: ${lWar.toStringAsFixed(3)}, C: ${oklchWar.c.toStringAsFixed(3)}',
-        ),
-        LayerSpec(
-          id: 'ERR',
-          label: 'Error Status',
-          role: 'Invalid Inputs & Hazards',
-          l: lErr,
-          c: oklchErr.c,
-          color: colError,
-          hex: oklchErrDerived.hexCode,
-          formula: 'L: ${lErr.toStringAsFixed(3)}, C: ${oklchErr.c.toStringAsFixed(3)}',
-        ),
-        LayerSpec(
-          id: 'INF',
-          label: 'Info Status',
-          role: 'Guidance & Notifications',
-          l: lInf,
-          c: oklchInf.c,
-          color: colInfo,
-          hex: oklchInfDerived.hexCode,
-          formula: 'L: ${lInf.toStringAsFixed(3)}, C: ${oklchInf.c.toStringAsFixed(3)}',
-        ),
-        LayerSpec(
-          id: 'TDB',
-          label: 'Disabled Border',
-          role: 'Faint Edge Boundary',
-          l: lText,
-          c: cText,
-          color: colTfDisabledBorder,
-          hex: ColorUtils.toHex(colTfDisabledBorder),
-          formula: 'textMain alpha 0.08',
-        ),
-        LayerSpec(
-          id: 'TDT',
-          label: 'Disabled Text/Icon',
-          role: 'WCAG Inactive Level',
-          l: lText,
-          c: cText,
-          color: colTextDisabled,
-          hex: ColorUtils.toHex(colTextDisabled),
-          formula: 'textMain alpha 0.38',
-        ),
-      ];
-
-      return LayerPalette(
-        container1: col1,
-        container2: col2,
-        container3: col3,
-        textFieldFill: colField,
-        container4: col4,
-        textMain: colText,
-        tonalButtonFill: colTbf,
-        tonalButtonText: colTbt,
-        dividerLine: colDivider,
-        textFieldBorder: colTfBorder,
-        textFieldDisabledFill: colTfDisabledFill,
-        textFieldDisabledBorder: colTfDisabledBorder,
-        textDisabled: colTextDisabled,
-        primary: colPrimary,
-        onPrimary: colOnPrimary,
-        success: colSuccess,
-        onSuccess: colOnSuccess,
-        warning: colWarning,
-        onWarning: colOnWarning,
-        error: colError,
-        onError: colOnError,
-        info: colInfo,
-        onInfo: colOnInfo,
-        anchorL: anchorL,
-        chroma: c,
-        hue: h,
-        isDark: false,
-        specs: specs,
-      );
-    } else {
-      // ----------------- Dark Mode Formulas -----------------
-      // container1: anchorL - (effectiveC2Delta * 2.5) (paling gelap), chroma: c * 0.82
-      final l1 = (anchorL - effectiveC2Delta * 2.5).clamp(0.0, 1.0);
-      final c1 = c * 0.82;
-      final oklch1 = OklchColor(l1, c1, h);
-
-      // container2: anchorL - effectiveC2Delta (sangat dekat dengan C3), chroma: c * 0.94
-      final l2 = (anchorL - effectiveC2Delta).clamp(0.0, 1.0);
-      final c2 = c * 0.94;
-      final oklch2 = OklchColor(l2, c2, h);
-
-      // container3: anchorL, chroma: c (Primary Anchor)
-      final l3 = anchorL.clamp(0.0, 1.0);
-      final c3 = c;
-      final oklch3 = OklchColor(l3, c3, h);
-
-      // textFieldFill: anchorL - effectiveTroughDelta (cekung halus seimbang di atas C2, tidak terlalu gelap / tidak jatuh ke C1)
-      final lField = (anchorL - effectiveTroughDelta).clamp(0.0, 1.0);
-      final cField = c * 0.88;
-      final oklchField = OklchColor(lField, cField, h);
-
-      // container4: anchorL + 0.07 (Dialog, Context Menu & Popover Surface melayang di atas C3)
-      final l4 = (anchorL + 0.07).clamp(0.0, 1.0);
-      final c4 = c * 1.0;
-      final oklch4 = OklchColor(l4, c4, h);
-
-      // textMain: L = 0.93, chroma: 0.015
-      final lText = 0.93;
-      final cText = 0.015;
-      final oklchText = OklchColor(lText, cText, h);
-
-      // tonalButtonFill: (l4 + 0.065).clamp(0.0, 1.0)
-      final lTbf = (l4 + 0.065).clamp(0.0, 1.0);
-      final cTbf = c > 0.001 ? math.max(c * 1.3, 0.025) : 0.0;
-      final oklchTbf = OklchColor(lTbf, cTbf, h);
-
-      // tonalButtonText: textMain (CR > 5.5:1 terhadap TBF)
-      final oklchTbt = oklchText;
-
-      // 1. Divider Line: oklch(clamp(0.0, L_c3 + 0.05, 1.0) (C * 0.5) H)
-      final lDivider = (anchorL + 0.05).clamp(0.0, 1.0);
-      final cDivider = c * 0.5;
-      final oklchDivider = OklchColor(lDivider, cDivider, h);
-
-      // 2. Border TextField (Default/Unfocused): oklch(clamp(0.0, L_c3 + 0.08, 1.0) 0.02 H)
-      final lTfBorder = (anchorL + 0.08).clamp(0.0, 1.0);
-      const cTfBorder = 0.02;
-      final oklchTfBorder = OklchColor(lTfBorder, cTfBorder, h);
-
-      // Primary Color in Dark Mode: L diangkat agar berpendar jelas dan mudah dibaca di atas permukaan gelap
-      final lPri = (oklchP.l < 0.55 ? (oklchP.l + 0.22) : oklchP.l).clamp(0.55, 0.78);
-      final oklchPri = OklchColor(lPri, oklchP.c, oklchP.h);
-      final colPrimary = oklchPri.toColor();
-      final colOnPrimary = lPri > 0.62 ? const Color(0xFF090D16) : Colors.white;
-
-      // Semantic Status Colors in Dark Mode
-      final lSuc = (oklchSuc.l < 0.55 ? (oklchSuc.l + 0.22) : oklchSuc.l).clamp(0.55, 0.78);
-      final oklchSucDerived = OklchColor(lSuc, oklchSuc.c, oklchSuc.h);
-      final colSuccess = oklchSucDerived.toColor();
-      final colOnSuccess = lSuc > 0.62 ? const Color(0xFF090D16) : Colors.white;
-
-      final lWar = (oklchWar.l < 0.60 ? (oklchWar.l + 0.18) : oklchWar.l).clamp(0.60, 0.82);
-      final oklchWarDerived = OklchColor(lWar, oklchWar.c, oklchWar.h);
-      final colWarning = oklchWarDerived.toColor();
-      final colOnWarning = lWar > 0.62 ? const Color(0xFF090D16) : Colors.white;
-
-      final lErr = (oklchErr.l < 0.55 ? (oklchErr.l + 0.22) : oklchErr.l).clamp(0.55, 0.78);
-      final oklchErrDerived = OklchColor(lErr, oklchErr.c, oklchErr.h);
-      final colError = oklchErrDerived.toColor();
-      final colOnError = lErr > 0.62 ? const Color(0xFF090D16) : Colors.white;
-
-      final lInf = (oklchInf.l < 0.55 ? (oklchInf.l + 0.22) : oklchInf.l).clamp(0.55, 0.78);
-      final oklchInfDerived = OklchColor(lInf, oklchInf.c, oklchInf.h);
-      final colInfo = oklchInfDerived.toColor();
-      final colOnInfo = lInf > 0.62 ? const Color(0xFF090D16) : Colors.white;
-
-      final col1 = oklch1.toColor();
-      final col2 = oklch2.toColor();
-      final col3 = oklch3.toColor();
-      final colField = oklchField.toColor();
-      final col4 = oklch4.toColor();
-      final colText = oklchText.toColor();
-      final colTbf = oklchTbf.toColor();
-      final colTbt = oklchTbt.toColor();
-      final colDivider = oklchDivider.toColor();
-      final colTfBorder = oklchTfBorder.toColor();
-
-      // 3. Disabled TextField Fill: Disamakan persis dengan Container 3 (L = L_c3, C, H)
-      final colTfDisabledFill = col3;
-
-      // 4. Disabled Border: textMain dengan alpha 0.08
-      final colTfDisabledBorder = colText.withValues(alpha: 0.08);
-
-      // 5. Disabled Text / Icon: textMain dengan alpha 0.38
-      final colTextDisabled = colText.withValues(alpha: 0.38);
-
-      final specs = [
-        LayerSpec(
-          id: 'C1',
-          label: 'Container 1',
-          role: 'Canvas Background',
-          l: l1,
-          c: c1,
-          color: col1,
-          hex: oklch1.hexCode,
-          formula:
-              'anchorL - ${(effectiveC2Delta * 2.5).toStringAsFixed(3)} (c * 0.82)',
-        ),
-        LayerSpec(
-          id: 'C2',
-          label: 'Container 2',
-          role: 'Card Wrapper',
-          l: l2,
-          c: c2,
-          color: col2,
-          hex: oklch2.hexCode,
-          formula:
-              'anchorL - ${effectiveC2Delta.toStringAsFixed(3)} (c * 0.94)',
-        ),
-        LayerSpec(
-          id: 'C3',
-          label: 'Container 3',
-          role: 'Anchor Surface',
-          l: l3,
-          c: c3,
-          color: col3,
-          hex: oklch3.hexCode,
-          formula: 'anchorL (c * 1.0)',
-        ),
-        LayerSpec(
-          id: 'TF',
-          label: 'TextField Fill',
-          role: 'Soft Sunken Trough',
-          l: lField,
-          c: cField,
-          color: colField,
-          hex: oklchField.hexCode,
-          formula:
-              'anchorL - ${effectiveTroughDelta.toStringAsFixed(3)} (c * 0.88)',
-        ),
-        LayerSpec(
-          id: 'TFB',
-          label: 'TF Border',
-          role: 'Default Unfocused Outline',
-          l: lTfBorder,
-          c: cTfBorder,
-          color: colTfBorder,
-          hex: oklchTfBorder.hexCode,
-          formula: 'anchorL + 0.08 (c = 0.02)',
-        ),
-        LayerSpec(
-          id: 'TFD',
-          label: 'Disabled TF Fill',
-          role: 'Flat with C3 (no trough)',
-          l: l3,
-          c: c3,
-          color: colTfDisabledFill,
-          hex: oklch3.hexCode,
-          formula: 'L = anchorL, C = c (= C3)',
-        ),
-        LayerSpec(
-          id: 'DIV',
-          label: 'Divider Line',
-          role: 'Subtle Content Separator',
-          l: lDivider,
-          c: cDivider,
-          color: colDivider,
-          hex: oklchDivider.hexCode,
-          formula: 'anchorL + 0.05 (c * 0.5)',
-        ),
-        LayerSpec(
-          id: 'C4',
-          label: 'Container 4',
-          role: 'Dialog & Menu Surface',
-          l: l4,
-          c: c4,
-          color: col4,
-          hex: oklch4.hexCode,
-          formula: 'anchorL + 0.07 (c * 1.0)',
-        ),
-        LayerSpec(
-          id: 'TBF',
-          label: 'Tonal Button Fill',
-          role: 'Tonal Action Fill (C3 & C4)',
-          l: lTbf,
-          c: cTbf,
-          color: colTbf,
-          hex: oklchTbf.hexCode,
-          formula: 'C4 + 0.065 (L = ${lTbf.toStringAsFixed(3)})',
-        ),
-        LayerSpec(
-          id: 'TBT',
-          label: 'Tonal Button Text',
-          role: 'Tonal Action Text',
-          l: lText,
-          c: cText,
-          color: colTbt,
-          hex: oklchTbt.hexCode,
-          formula: 'textMain (L = 0.93)',
-        ),
-        LayerSpec(
-          id: 'PRI',
-          label: 'Primary Accent',
-          role: 'Focus Border & Button',
-          l: lPri,
-          c: oklchP.c,
-          color: colPrimary,
-          hex: oklchPri.hexCode,
-          formula: 'L: ${lPri.toStringAsFixed(3)}, C: ${oklchP.c.toStringAsFixed(3)}',
-        ),
-        LayerSpec(
-          id: 'SUC',
-          label: 'Success Status',
-          role: 'Confirmations & Completed',
-          l: lSuc,
-          c: oklchSuc.c,
-          color: colSuccess,
-          hex: oklchSucDerived.hexCode,
-          formula: 'L: ${lSuc.toStringAsFixed(3)}, C: ${oklchSuc.c.toStringAsFixed(3)}',
-        ),
-        LayerSpec(
-          id: 'WAR',
-          label: 'Warning Status',
-          role: 'Cautions & Alerts',
-          l: lWar,
-          c: oklchWar.c,
-          color: colWarning,
-          hex: oklchWarDerived.hexCode,
-          formula: 'L: ${lWar.toStringAsFixed(3)}, C: ${oklchWar.c.toStringAsFixed(3)}',
-        ),
-        LayerSpec(
-          id: 'ERR',
-          label: 'Error Status',
-          role: 'Invalid Inputs & Hazards',
-          l: lErr,
-          c: oklchErr.c,
-          color: colError,
-          hex: oklchErrDerived.hexCode,
-          formula: 'L: ${lErr.toStringAsFixed(3)}, C: ${oklchErr.c.toStringAsFixed(3)}',
-        ),
-        LayerSpec(
-          id: 'INF',
-          label: 'Info Status',
-          role: 'Guidance & Notifications',
-          l: lInf,
-          c: oklchInf.c,
-          color: colInfo,
-          hex: oklchInfDerived.hexCode,
-          formula: 'L: ${lInf.toStringAsFixed(3)}, C: ${oklchInf.c.toStringAsFixed(3)}',
-        ),
-        LayerSpec(
-          id: 'TDB',
-          label: 'Disabled Border',
-          role: 'Faint Edge Boundary',
-          l: lText,
-          c: cText,
-          color: colTfDisabledBorder,
-          hex: ColorUtils.toHex(colTfDisabledBorder),
-          formula: 'textMain alpha 0.08',
-        ),
-        LayerSpec(
-          id: 'TDT',
-          label: 'Disabled Text/Icon',
-          role: 'WCAG Inactive Level',
-          l: lText,
-          c: cText,
-          color: colTextDisabled,
-          hex: ColorUtils.toHex(colTextDisabled),
-          formula: 'textMain alpha 0.38',
-        ),
-      ];
-
-      return LayerPalette(
-        container1: col1,
-        container2: col2,
-        container3: col3,
-        textFieldFill: colField,
-        container4: col4,
-        textMain: colText,
-        tonalButtonFill: colTbf,
-        tonalButtonText: colTbt,
-        dividerLine: colDivider,
-        textFieldBorder: colTfBorder,
-        textFieldDisabledFill: colTfDisabledFill,
-        textFieldDisabledBorder: colTfDisabledBorder,
-        textDisabled: colTextDisabled,
-        primary: colPrimary,
-        onPrimary: colOnPrimary,
-        success: colSuccess,
-        onSuccess: colOnSuccess,
-        warning: colWarning,
-        onWarning: colOnWarning,
-        error: colError,
-        onError: colOnError,
-        info: colInfo,
-        onInfo: colOnInfo,
-        anchorL: anchorL,
-        chroma: c,
-        hue: h,
-        isDark: true,
-        specs: specs,
-      );
-    }
-  }
-
-  @override
-  LayerPalette copyWith({
-    Color? container1,
-    Color? container2,
-    Color? container3,
-    Color? textFieldFill,
-    Color? container4,
-    Color? textMain,
-    Color? tonalButtonFill,
-    Color? tonalButtonText,
-    Color? dividerLine,
-    Color? textFieldBorder,
-    Color? textFieldDisabledFill,
-    Color? textFieldDisabledBorder,
-    Color? textDisabled,
-    Color? primary,
-    Color? onPrimary,
-    Color? success,
-    Color? onSuccess,
-    Color? warning,
-    Color? onWarning,
-    Color? error,
-    Color? onError,
-    Color? info,
-    Color? onInfo,
-    double? anchorL,
-    double? chroma,
-    double? hue,
-    bool? isDark,
-    List<LayerSpec>? specs,
-  }) {
-    return LayerPalette(
-      container1: container1 ?? this.container1,
-      container2: container2 ?? this.container2,
-      container3: container3 ?? this.container3,
-      textFieldFill: textFieldFill ?? this.textFieldFill,
-      container4: container4 ?? this.container4,
-      textMain: textMain ?? this.textMain,
-      tonalButtonFill: tonalButtonFill ?? this.tonalButtonFill,
-      tonalButtonText: tonalButtonText ?? this.tonalButtonText,
-      dividerLine: dividerLine ?? this.dividerLine,
-      textFieldBorder: textFieldBorder ?? this.textFieldBorder,
-      textFieldDisabledFill:
-          textFieldDisabledFill ?? this.textFieldDisabledFill,
-      textFieldDisabledBorder:
-          textFieldDisabledBorder ?? this.textFieldDisabledBorder,
-      textDisabled: textDisabled ?? this.textDisabled,
-      primary: primary ?? this.primary,
-      onPrimary: onPrimary ?? this.onPrimary,
-      success: success ?? this.success,
-      onSuccess: onSuccess ?? this.onSuccess,
-      warning: warning ?? this.warning,
-      onWarning: onWarning ?? this.onWarning,
-      error: error ?? this.error,
-      onError: onError ?? this.onError,
-      info: info ?? this.info,
-      onInfo: onInfo ?? this.onInfo,
-      anchorL: anchorL ?? this.anchorL,
-      chroma: chroma ?? this.chroma,
-      hue: hue ?? this.hue,
-      isDark: isDark ?? this.isDark,
-      specs: specs ?? this.specs,
-    );
-  }
-
-  @override
-  LayerPalette lerp(ThemeExtension<LayerPalette>? other, double t) {
-    if (other is! LayerPalette) return this;
-    return LayerPalette(
-      container1: Color.lerp(container1, other.container1, t) ?? container1,
-      container2: Color.lerp(container2, other.container2, t) ?? container2,
-      container3: Color.lerp(container3, other.container3, t) ?? container3,
-      textFieldFill:
-          Color.lerp(textFieldFill, other.textFieldFill, t) ?? textFieldFill,
-      container4: Color.lerp(container4, other.container4, t) ?? container4,
-      textMain: Color.lerp(textMain, other.textMain, t) ?? textMain,
-      tonalButtonFill:
-          Color.lerp(tonalButtonFill, other.tonalButtonFill, t) ??
-          tonalButtonFill,
-      tonalButtonText:
-          Color.lerp(tonalButtonText, other.tonalButtonText, t) ??
-          tonalButtonText,
-      dividerLine: Color.lerp(dividerLine, other.dividerLine, t) ?? dividerLine,
-      textFieldBorder:
-          Color.lerp(textFieldBorder, other.textFieldBorder, t) ??
-          textFieldBorder,
-      textFieldDisabledFill:
-          Color.lerp(textFieldDisabledFill, other.textFieldDisabledFill, t) ??
-          textFieldDisabledFill,
-      textFieldDisabledBorder:
-          Color.lerp(
-            textFieldDisabledBorder,
-            other.textFieldDisabledBorder,
-            t,
-          ) ??
-          textFieldDisabledBorder,
-      textDisabled:
-          Color.lerp(textDisabled, other.textDisabled, t) ?? textDisabled,
-      primary: Color.lerp(primary, other.primary, t) ?? primary,
-      onPrimary: Color.lerp(onPrimary, other.onPrimary, t) ?? onPrimary,
-      success: Color.lerp(success, other.success, t) ?? success,
-      onSuccess: Color.lerp(onSuccess, other.onSuccess, t) ?? onSuccess,
-      warning: Color.lerp(warning, other.warning, t) ?? warning,
-      onWarning: Color.lerp(onWarning, other.onWarning, t) ?? onWarning,
-      error: Color.lerp(error, other.error, t) ?? error,
-      onError: Color.lerp(onError, other.onError, t) ?? onError,
-      info: Color.lerp(info, other.info, t) ?? info,
-      onInfo: Color.lerp(onInfo, other.onInfo, t) ?? onInfo,
-      anchorL: anchorL + (other.anchorL - anchorL) * t,
-      chroma: chroma + (other.chroma - chroma) * t,
-      hue: hue + (other.hue - hue) * t,
-      isDark: t < 0.5 ? isDark : other.isDark,
-      specs: t < 0.5 ? specs : other.specs,
-    );
-  }
-
-  /// Converts this [LayerPalette] into a complete, standard Flutter [ThemeData].
-  ///
-  /// Automatically overrides and standardizes:
-  /// - [scaffoldBackgroundColor] -> container1 (C1)
-  /// - [cardTheme] -> container3 (C3)
-  /// - [inputDecorationTheme] -> textFieldFill (TF), textFieldBorder (TFB), textFieldDisabledBorder, errorBorder, focusedErrorBorder
-  /// - [dividerTheme] -> dividerLine (DIV)
-  /// - [dialogTheme] & [popupMenuTheme] -> container4 (C4)
-  /// - [colorScheme] -> Material 3 color mapping matching OKLCH depth tiers & status colors
-  /// - [textTheme] -> textMain typography hierarchy
-  /// - [extensions] -> [this] for explicit token access
-  ThemeData toThemeData() {
-    final baseColorScheme = isDark
-        ? const ColorScheme.dark()
-        : const ColorScheme.light();
-
-    final colorScheme = baseColorScheme.copyWith(
-      primary: primary,
-      onPrimary: onPrimary,
-      error: error,
-      onError: onError,
-      surface: container3,
-      onSurface: textMain,
-      onSurfaceVariant: textMain.withValues(alpha: 0.72),
-      surfaceContainerLowest: container1,
-      surfaceContainerLow: container1,
-      surfaceContainer: container2,
-      surfaceContainerHigh: container3,
-      surfaceContainerHighest: container4,
-      outline: textFieldBorder,
-      outlineVariant: dividerLine,
-      secondaryContainer: tonalButtonFill,
-      onSecondaryContainer: tonalButtonText,
-    );
-
-    return ThemeData(
-      useMaterial3: true,
-      brightness: isDark ? Brightness.dark : Brightness.light,
-      colorScheme: colorScheme,
-      scaffoldBackgroundColor: container1,
-
-      // Text Theme mapping
-      textTheme: TextTheme(
-        headlineMedium: TextStyle(color: textMain, fontWeight: FontWeight.bold),
-        titleLarge: TextStyle(color: textMain, fontWeight: FontWeight.bold),
-        titleMedium: TextStyle(color: textMain, fontWeight: FontWeight.w600),
-        titleSmall: TextStyle(color: textMain.withValues(alpha: 0.85), fontWeight: FontWeight.w600),
-        bodyLarge: TextStyle(color: textMain),
-        bodyMedium: TextStyle(color: textMain),
-        bodySmall: TextStyle(color: textMain.withValues(alpha: 0.72)),
-        labelLarge: TextStyle(color: textMain, fontWeight: FontWeight.w700),
-        labelMedium: TextStyle(color: textMain.withValues(alpha: 0.75)),
-        labelSmall: TextStyle(color: textMain.withValues(alpha: 0.55)),
-      ),
-
-      // Input Decoration (TextFields)
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: textFieldFill,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: textFieldBorder, width: 1.0),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: primary,
-            width: 1.8,
-          ),
-        ),
-        disabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: textFieldDisabledBorder, width: 1.0),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: error, width: 1.2),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: error, width: 1.8),
-        ),
-        errorStyle: TextStyle(
-          color: error,
-          fontSize: 11.5,
-          fontWeight: FontWeight.w500,
-        ),
-        hintStyle: TextStyle(color: textMain.withValues(alpha: 0.45)),
-        labelStyle: TextStyle(color: textMain.withValues(alpha: 0.75)),
-      ),
-
-      // Button Themes (Primary Action)
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: primary,
-          foregroundColor: onPrimary,
-          elevation: 0,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
-      ),
-      filledButtonTheme: FilledButtonThemeData(
-        style: FilledButton.styleFrom(
-          backgroundColor: primary,
-          foregroundColor: onPrimary,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
-      ),
-
-      // Divider Theme
-      dividerTheme: DividerThemeData(
-        color: dividerLine,
-        thickness: 1.0,
-        space: 1.0,
-      ),
-
-      // Dialog Theme (Container 4)
-      dialogTheme: DialogThemeData(
-        backgroundColor: container4,
-        surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: BorderSide(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.12)
-                : textMain.withValues(alpha: 0.08),
-            width: 1.0,
-          ),
-        ),
-      ),
-
-      // Popup Menu & Menu Theme (Container 4)
-      popupMenuTheme: PopupMenuThemeData(
-        color: container4,
-        surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-          side: BorderSide(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.12)
-                : textMain.withValues(alpha: 0.08),
-            width: 1.0,
-          ),
-        ),
-      ),
-
-      // Card Theme (Container 3)
-      cardTheme: CardThemeData(
-        color: container3,
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.06)
-                : textMain.withValues(alpha: 0.04),
-          ),
-        ),
-      ),
-
-      // Extensions
-      extensions: [this],
-    );
-  }
 }
 
 /// Main Application Entry Point
@@ -1199,6 +26,12 @@ enum ColorPickerTarget {
 }
 
 class _OklchPaletteDemoAppState extends State<OklchPaletteDemoApp> {
+  final AppThemeController _themeController = AppThemeController(
+    initialPreset: BuiltInPresets.slate,
+  );
+  ShapePreset _shape = ShapePreset.rounded;
+  DensityPreset _density = DensityPreset.comfortable;
+
   // Configurable OKLCH anchor parameters for LIGHT MODE
   // Defaults to #F4F5F7 (Cool Neutral Slate Light)
   double _lightAnchorL = 0.970;
@@ -1227,6 +60,262 @@ class _OklchPaletteDemoAppState extends State<OklchPaletteDemoApp> {
   Color _infoColor = const Color(0xFF06B6D4);
 
   bool _showControls = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _applyPreset(BuiltInPresets.slate, notify: false);
+  }
+
+  void _applyPreset(ThemePreset preset, {bool notify = true}) {
+    _themeController.setPreset(preset);
+    _shape = preset.shape;
+    _density = preset.density;
+    _lightAnchorColor = preset.lightAnchor;
+    _darkAnchorColor = preset.darkAnchor;
+    _primaryColor = preset.primaryColor;
+
+    final oklchL = OklchColor.fromColor(_lightAnchorColor);
+    _lightHue = oklchL.h;
+    _lightChroma = oklchL.c.clamp(0.0, 0.15);
+    _lightAnchorL = oklchL.l.clamp(0.80, 0.98);
+
+    final oklchD = OklchColor.fromColor(_darkAnchorColor);
+    _darkHue = oklchD.h;
+    _darkChroma = oklchD.c.clamp(0.0, 0.15);
+    _darkAnchorL = oklchD.l.clamp(0.10, 0.40);
+
+    if (notify) setState(() {});
+  }
+
+  void _showSaveExportModal([BuildContext? context]) {
+    final effectiveContext = context ?? _navigatorKey.currentContext;
+    if (effectiveContext == null) return;
+
+    final currentPreset = ThemePreset(
+      id: _themeController.currentPreset.id,
+      name: _themeController.currentPreset.name,
+      description: _themeController.currentPreset.description,
+      lightAnchor: _lightAnchorColor,
+      darkAnchor: _darkAnchorColor,
+      primaryColor: _primaryColor,
+      shape: _shape,
+      density: _density,
+    );
+
+    final jsonString = _themeController.exportPresetJson(currentPreset);
+    final nameController = TextEditingController(text: '${currentPreset.name} (Copy)');
+
+    showDialog(
+      context: effectiveContext,
+      builder: (dialogCtx) => Dialog(
+        backgroundColor: const Color(0xFF161B26),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: Color(0xFF2E384D)),
+        ),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 520),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.bookmark_add_rounded, color: Colors.blueAccent),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Text(
+                        'Save & Export Theme Preset',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white70),
+                      onPressed: () => Navigator.pop(dialogCtx),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Beri nama untuk menyimpan preset ini ke dropdown, atau salin kode JSON untuk dibagikan.',
+                  style: TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: nameController,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    labelText: 'Nama Preset',
+                    labelStyle: const TextStyle(color: Color(0xFF94A3B8)),
+                    filled: true,
+                    fillColor: const Color(0xFF1E2536),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  height: 140,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0F1219),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFF262E40)),
+                  ),
+                  child: SingleChildScrollView(
+                    child: SelectableText(
+                      jsonString,
+                      style: const TextStyle(fontFamily: 'monospace', fontSize: 11, color: Color(0xFF38BDF8)),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    OutlinedButton.icon(
+                      icon: const Icon(Icons.copy_rounded, size: 16),
+                      label: const Text('Copy JSON'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        side: const BorderSide(color: Color(0xFF3B4863)),
+                      ),
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: jsonString));
+                        ScaffoldMessenger.of(effectiveContext).showSnackBar(
+                          const SnackBar(content: Text('JSON Preset disalin ke clipboard!')),
+                        );
+                      },
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.check_rounded, size: 16),
+                      label: const Text('Simpan Preset'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _primaryColor,
+                        foregroundColor: Colors.white,
+                      ),
+                      onPressed: () {
+                        final newPreset = _themeController.saveCustomPreset(
+                          nameController.text.trim().isEmpty ? 'Custom Theme' : nameController.text.trim(),
+                        );
+                        _applyPreset(newPreset);
+                        Navigator.pop(dialogCtx);
+                        ScaffoldMessenger.of(effectiveContext).showSnackBar(
+                          SnackBar(content: Text('Preset "${newPreset.name}" berhasil disimpan!')),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showImportModal([BuildContext? context]) {
+    final effectiveContext = context ?? _navigatorKey.currentContext;
+    if (effectiveContext == null) return;
+
+    final textController = TextEditingController();
+
+    showDialog(
+      context: effectiveContext,
+      builder: (dialogCtx) => Dialog(
+        backgroundColor: const Color(0xFF161B26),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: Color(0xFF2E384D)),
+        ),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 500),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.file_upload_rounded, color: Colors.amberAccent),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Text(
+                        'Import Theme Preset JSON',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.white70),
+                      onPressed: () => Navigator.pop(dialogCtx),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Paste kode JSON preset di bawah ini untuk memuat tema secara langsung (on-the-fly):',
+                  style: TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+                ),
+                const SizedBox(height: 14),
+                TextField(
+                  controller: textController,
+                  maxLines: 7,
+                  style: const TextStyle(fontFamily: 'monospace', fontSize: 11, color: Colors.white),
+                  decoration: InputDecoration(
+                    hintText: '{\n  "name": "My Theme",\n  "lightAnchorHex": "#F4F5F7",\n  "darkAnchorHex": "#101010",\n  ...\n}',
+                    hintStyle: const TextStyle(color: Color(0xFF475569)),
+                    filled: true,
+                    fillColor: const Color(0xFF0F1219),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(dialogCtx),
+                      child: const Text('Batal', style: TextStyle(color: Colors.white70)),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.play_arrow_rounded, size: 16),
+                      label: const Text('Terapkan Preset'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _primaryColor,
+                        foregroundColor: Colors.white,
+                      ),
+                      onPressed: () {
+                        try {
+                          final imported = _themeController.importPresetJson(textController.text.trim());
+                          _applyPreset(imported);
+                          Navigator.pop(dialogCtx);
+                          ScaffoldMessenger.of(effectiveContext).showSnackBar(
+                            SnackBar(content: Text('Preset "${imported.name}" berhasil diterapkan!')),
+                          );
+                        } catch (e) {
+                          ScaffoldMessenger.of(effectiveContext).showSnackBar(
+                            SnackBar(content: Text('Gagal memuat JSON: $e'), backgroundColor: Colors.red),
+                          );
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
   void _updateColorFromPicker(
     Color newColor, {
@@ -1492,8 +581,10 @@ class _OklchPaletteDemoAppState extends State<OklchPaletteDemoApp> {
         brightness: Brightness.light,
         fontFamily: 'Roboto',
       ),
-      home: Scaffold(
-        backgroundColor: const Color(0xFF0F1117),
+      home: Builder(
+        builder: (homeContext) {
+          return Scaffold(
+            backgroundColor: const Color(0xFF0F1117),
         appBar: AppBar(
           backgroundColor: const Color(0xFF181C26),
           elevation: 0,
@@ -1522,9 +613,9 @@ class _OklchPaletteDemoAppState extends State<OklchPaletteDemoApp> {
                     ),
                     const SizedBox(width: 8),
                     const Text(
-                      'OKLCH',
+                      'NEO DESIGN SYSTEM',
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 12,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFFF1F5F9),
                         letterSpacing: 0.8,
@@ -1540,16 +631,16 @@ class _OklchPaletteDemoAppState extends State<OklchPaletteDemoApp> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'Tiered Color Palette Architecture',
+                      'Theme Playground & Live Token Inspector',
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 15,
                         fontWeight: FontWeight.w700,
                         color: Colors.white,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
-                      'Independent Anchors (e.g. Light = #F4F5F7, Dark = #101010) • Semantic Status System',
+                      '4-Pillar Architecture: OKLCH Color • Directional Radius • Multi-Density Spacing • Single-Font OpenType',
                       style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -1559,10 +650,126 @@ class _OklchPaletteDemoAppState extends State<OklchPaletteDemoApp> {
             ],
           ),
           actions: [
+            // 1. Preset Dropdown
+            Container(
+              margin: const EdgeInsets.symmetric(vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              decoration: BoxDecoration(
+                color: const Color(0xFF252D3D),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFF384357)),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: _themeController.allPresets.any((p) => p.id == _themeController.currentPreset.id)
+                      ? _themeController.currentPreset.id
+                      : null,
+                  hint: Text(
+                    _themeController.currentPreset.name,
+                    style: const TextStyle(color: Colors.white, fontSize: 13),
+                  ),
+                  dropdownColor: const Color(0xFF1E2536),
+                  icon: const Icon(Icons.arrow_drop_down, color: Colors.white70),
+                  items: _themeController.allPresets.map((preset) {
+                    return DropdownMenuItem<String>(
+                      value: preset.id,
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 10,
+                            height: 10,
+                            decoration: BoxDecoration(
+                              color: preset.primaryColor,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            preset.name,
+                            style: const TextStyle(color: Colors.white, fontSize: 13),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (selectedId) {
+                    if (selectedId != null) {
+                      final match = _themeController.allPresets.firstWhere((p) => p.id == selectedId);
+                      _applyPreset(match);
+                    }
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+
+            // 2. Shape Toggle
+            ActionChip(
+              avatar: Icon(
+                _shape == ShapePreset.rounded ? Icons.rounded_corner : Icons.crop_square,
+                size: 16,
+                color: _shape == ShapePreset.rounded ? Colors.amberAccent : Colors.white70,
+              ),
+              label: Text(
+                _shape == ShapePreset.rounded ? 'Rounded' : 'Sharp',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: _shape == ShapePreset.rounded ? Colors.amberAccent : Colors.white,
+                ),
+              ),
+              backgroundColor: const Color(0xFF252D3D),
+              side: const BorderSide(color: Color(0xFF384357)),
+              onPressed: () {
+                setState(() {
+                  _shape = _shape == ShapePreset.rounded ? ShapePreset.sharp : ShapePreset.rounded;
+                  _themeController.setShape(_shape);
+                });
+              },
+            ),
+            const SizedBox(width: 6),
+
+            // 3. Density Toggle
+            ActionChip(
+              avatar: Icon(
+                _density == DensityPreset.compact ? Icons.density_small : Icons.density_medium,
+                size: 16,
+                color: _density == DensityPreset.compact ? Colors.cyanAccent : Colors.white70,
+              ),
+              label: Text(
+                _density == DensityPreset.compact ? 'Compact' : 'Comfortable',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: _density == DensityPreset.compact ? Colors.cyanAccent : Colors.white,
+                ),
+              ),
+              backgroundColor: const Color(0xFF252D3D),
+              side: const BorderSide(color: Color(0xFF384357)),
+              onPressed: () {
+                setState(() {
+                  _density = _density == DensityPreset.comfortable ? DensityPreset.compact : DensityPreset.comfortable;
+                  _themeController.setDensity(_density);
+                });
+              },
+            ),
+            const SizedBox(width: 6),
+
+            // 4. Save / Export Button
             IconButton(
-              tooltip: _showControls
-                  ? 'Sembunyikan Panel Warna'
-                  : 'Buka Panel Warna',
+              tooltip: 'Simpan / Ekspor Preset JSON',
+              icon: const Icon(Icons.bookmark_add_outlined, color: Colors.white70),
+              onPressed: () => _showSaveExportModal(homeContext),
+            ),
+
+            // 5. Import Button
+            IconButton(
+              tooltip: 'Impor Preset JSON',
+              icon: const Icon(Icons.file_upload_outlined, color: Colors.white70),
+              onPressed: () => _showImportModal(homeContext),
+            ),
+
+            // 6. Color Panel Toggle
+            IconButton(
+              tooltip: _showControls ? 'Sembunyikan Panel Warna' : 'Buka Panel Warna',
               icon: Icon(
                 _showControls ? Icons.palette_rounded : Icons.palette_outlined,
                 color: _showControls ? _primaryColor : Colors.white70,
@@ -1595,8 +802,21 @@ class _OklchPaletteDemoAppState extends State<OklchPaletteDemoApp> {
                   builder: (context, constraints) {
                     final isWide = constraints.maxWidth >= 840;
 
+                    final radiusTheme = _shape == ShapePreset.sharp
+                        ? AppRadiusTheme.sharp()
+                        : AppRadiusTheme.rounded();
+                    final spacingTheme = _density == DensityPreset.compact
+                        ? AppSpacingTheme.compact()
+                        : AppSpacingTheme.comfortable();
+
                     final lightThemeWidget = Theme(
-                      data: lightPalette.toThemeData(),
+                      data: lightPalette.toThemeData().copyWith(
+                        extensions: [
+                          lightPalette,
+                          radiusTheme,
+                          spacingTheme,
+                        ],
+                      ),
                       child: StackPreviewCard(
                         modeTitle: 'LIGHT MODE',
                         isDark: false,
@@ -1607,7 +827,13 @@ class _OklchPaletteDemoAppState extends State<OklchPaletteDemoApp> {
                     );
 
                     final darkThemeWidget = Theme(
-                      data: darkPalette.toThemeData(),
+                      data: darkPalette.toThemeData().copyWith(
+                        extensions: [
+                          darkPalette,
+                          radiusTheme,
+                          spacingTheme,
+                        ],
+                      ),
                       child: StackPreviewCard(
                         modeTitle: 'DARK MODE',
                         isDark: true,
@@ -1646,8 +872,10 @@ class _OklchPaletteDemoAppState extends State<OklchPaletteDemoApp> {
             ],
           ),
         ),
-      ),
-    );
+      );
+    },
+  ),
+);
   }
 
   /// Responsive configuration panel for Light anchor, Dark anchor, Primary Brand, and 4 Semantic Statuses.
@@ -1942,22 +1170,25 @@ class StackPreviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = Theme.of(context).extension<LayerPalette>()!;
+    final palette = context.color;
+    final radius = context.radius;
+    final spacing = context.spacing;
+    final text = context.text;
 
     return Container(
       color: palette.container1, // Background utama kanvas (C1)
       child: ListView(
-        padding: const EdgeInsets.all(20),
+        padding: spacing.insetMd,
         children: [
           // Header Bar for the Column
           _buildModeHeader(context, palette),
-          const SizedBox(height: 18),
+          spacing.vGapMd,
 
           // Layer 2: Card Penampung Lapis Kedua (container2)
           Container(
             decoration: BoxDecoration(
               color: palette.container2,
-              borderRadius: BorderRadius.circular(22),
+              borderRadius: radius.xl.all,
               border: Border.all(
                 color: isDark
                     ? Colors.white.withValues(alpha: 0.08)
@@ -1974,7 +1205,7 @@ class StackPreviewCard extends StatelessWidget {
                 ),
               ],
             ),
-            padding: const EdgeInsets.all(18),
+            padding: spacing.insetMd,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1998,13 +1229,13 @@ class StackPreviewCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                spacing.vGapMd,
 
                 // Layer 3: Permukaan Acuan Utama (container3) - The Anchor!
                 Container(
                   decoration: BoxDecoration(
                     color: palette.container3,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: radius.lg.all,
                     border: Border.all(
                       color: palette.primary.withValues(
                         alpha: isDark ? 0.35 : 0.22,
@@ -2021,7 +1252,7 @@ class StackPreviewCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  padding: const EdgeInsets.all(18),
+                  padding: spacing.insetMd,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -2035,7 +1266,7 @@ class StackPreviewCard extends StatelessWidget {
                               color: palette.primary.withValues(
                                 alpha: isDark ? 0.25 : 0.12,
                               ),
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: radius.md.all,
                             ),
                             child: Icon(
                               Icons.anchor_rounded,
@@ -2043,15 +1274,14 @@ class StackPreviewCard extends StatelessWidget {
                               color: palette.primary,
                             ),
                           ),
-                          const SizedBox(width: 10),
+                          spacing.hGapSm,
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   'Container 3 (Primary Anchor)',
-                                  style: TextStyle(
-                                    fontSize: 15,
+                                  style: text.titleMedium?.copyWith(
                                     fontWeight: FontWeight.w700,
                                     color: palette.textMain,
                                   ),
@@ -2059,11 +1289,8 @@ class StackPreviewCard extends StatelessWidget {
                                 const SizedBox(height: 2),
                                 Text(
                                   'Permukaan acuan utama lapis ketiga. Seluruh layer lain dihitung relatif terhadap anchorL ini.',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: palette.textMain.withValues(
-                                      alpha: 0.72,
-                                    ),
+                                  style: text.bodySmall?.copyWith(
+                                    color: palette.textSecondary,
                                     height: 1.35,
                                   ),
                                 ),
@@ -2081,19 +1308,18 @@ class StackPreviewCard extends StatelessWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 18),
+                      spacing.vGapMd,
 
                       // Layer: Sunken TextField (textFieldFill)
                       Text(
                         'TEXT FIELD WITH SUNKEN TROUGH EFFECT',
-                        style: TextStyle(
-                          fontSize: 11,
+                        style: text.labelSmall?.copyWith(
                           fontWeight: FontWeight.bold,
                           letterSpacing: 0.6,
-                          color: palette.textMain.withValues(alpha: 0.65),
+                          color: palette.textSecondary,
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      spacing.vGapXs,
                       TextField(
                         style: TextStyle(color: palette.textMain, fontSize: 14),
                         cursorColor: palette.textMain,
@@ -2103,59 +1329,51 @@ class StackPreviewCard extends StatelessWidget {
                               : 'Efek Cekung Light Mode (lebih gelap dari C3)',
                           hintStyle: TextStyle(
                             fontSize: 13,
-                            color: palette.textMain.withValues(alpha: 0.50),
+                            color: palette.textMuted,
                           ),
                           prefixIcon: Icon(
                             Icons.search_rounded,
-                            color: palette.textMain.withValues(alpha: 0.60),
+                            color: palette.textSecondary,
                           ),
                           suffixIcon: Padding(
-                            padding: const EdgeInsets.all(8.0),
+                            padding: spacing.insetSquish,
                             child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
+                              padding: spacing.insetSquish,
                               decoration: BoxDecoration(
                                 color: palette.container3.withValues(
                                   alpha: 0.8,
                                 ),
-                                borderRadius: BorderRadius.circular(6),
+                                borderRadius: radius.xs.all,
                               ),
                               child: Text(
                                 'L: ${palette.specs[3].l.toStringAsFixed(2)}',
-                                style: TextStyle(
-                                  fontSize: 10,
+                                style: text.labelSmall?.tabular.slashZero?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   color: palette.textMain,
-                                  fontFamily: 'monospace',
                                 ),
                               ),
                             ),
                           ),
                           filled: true,
                           fillColor: palette.textFieldFill,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 14,
-                          ),
+                          contentPadding: spacing.insetMd,
                           // Border fisik tipis 1px penegas cekung (Default/Unfocused)
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: radius.md.all,
                             borderSide: BorderSide(
                               color: palette.textFieldBorder,
                               width: 1.0,
                             ),
                           ),
                           enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: radius.md.all,
                             borderSide: BorderSide(
                               color: palette.textFieldBorder,
                               width: 1.0,
                             ),
                           ),
                           focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: radius.md.all,
                             borderSide: BorderSide(
                               color: palette.primary,
                               width: 1.5,
@@ -2163,7 +1381,7 @@ class StackPreviewCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      spacing.vGapXs,
                       Text(
                         isDark
                             ? 'Rumus Cekung: ${palette.specs[3].formula} • Border: ${palette.specs[4].formula}'
@@ -2235,7 +1453,7 @@ class StackPreviewCard extends StatelessWidget {
                               color: palette.textDisabled.withValues(
                                 alpha: 0.10,
                               ),
-                              borderRadius: BorderRadius.circular(4),
+                              borderRadius: radius.xs.all,
                               border: Border.all(
                                 color: palette.textFieldDisabledBorder,
                                 width: 0.8,
@@ -2243,7 +1461,7 @@ class StackPreviewCard extends StatelessWidget {
                             ),
                             child: Text(
                               'NON-INTERACTIVE',
-                              style: TextStyle(
+                              style: text.labelSmall?.copyWith(
                                 fontSize: 8.5,
                                 fontWeight: FontWeight.bold,
                                 color: palette.textDisabled,
@@ -2253,7 +1471,7 @@ class StackPreviewCard extends StatelessWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 6),
+                      spacing.vGapXs,
                       TextField(
                         enabled: false,
                         style: TextStyle(
@@ -2273,38 +1491,30 @@ class StackPreviewCard extends StatelessWidget {
                             size: 20,
                           ),
                           suffixIcon: Padding(
-                            padding: const EdgeInsets.all(8.0),
+                            padding: spacing.insetSquish,
                             child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
+                              padding: spacing.insetSquish,
                               decoration: BoxDecoration(
                                 color: palette.textDisabled.withValues(
                                   alpha: 0.08,
                                 ),
-                                borderRadius: BorderRadius.circular(6),
+                                borderRadius: radius.xs.all,
                               ),
                               child: Text(
                                 'L: ${palette.specs[2].l.toStringAsFixed(2)}',
-                                style: TextStyle(
-                                  fontSize: 10,
+                                style: text.labelSmall?.tabular.slashZero?.copyWith(
                                   fontWeight: FontWeight.bold,
                                   color: palette.textDisabled,
-                                  fontFamily: 'monospace',
                                 ),
                               ),
                             ),
                           ),
                           filled: true,
                           fillColor: palette.textFieldDisabledFill,
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 14,
-                          ),
+                          contentPadding: spacing.insetMd,
                           // Disabled Border: textMain dengan alpha 0.08
                           disabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: radius.md.all,
                             borderSide: BorderSide(
                               color: palette.textFieldDisabledBorder,
                               width: 1.0,
@@ -2312,16 +1522,16 @@ class StackPreviewCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 6),
+                      spacing.vGapXs,
                       Text(
                         'Isian: Sama persis C3 (efek cekung hilang/rata) • Border: textMain 0.08a • Teks: WCAG 0.38a',
                         style: TextStyle(
                           fontSize: 10.5,
                           fontStyle: FontStyle.italic,
-                          color: palette.textMain.withValues(alpha: 0.55),
+                          color: palette.textSecondary,
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      spacing.vGapMd,
 
                       // Divider Line
                       Divider(
@@ -2329,7 +1539,7 @@ class StackPreviewCard extends StatelessWidget {
                         thickness: 1.0,
                         height: 1,
                       ),
-                      const SizedBox(height: 16),
+                      spacing.vGapMd,
 
                       // PRIMARY ACTION & FOCUS BORDER SHOWCASE
                       Row(
@@ -2340,19 +1550,18 @@ class StackPreviewCard extends StatelessWidget {
                               children: [
                                 Text(
                                   'PRIMARY BRAND ACTION & FOCUS BORDER',
-                                  style: TextStyle(
-                                    fontSize: 11,
+                                  style: text.labelSmall?.copyWith(
                                     fontWeight: FontWeight.bold,
                                     letterSpacing: 0.6,
-                                    color: palette.textMain.withValues(alpha: 0.65),
+                                    color: palette.textSecondary,
                                   ),
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
                                   'Warna brand primary terkalibrasi OKLCH dengan kontras otomatis.',
-                                  style: TextStyle(
+                                  style: text.bodySmall?.copyWith(
                                     fontSize: 10.5,
-                                    color: palette.textMain.withValues(alpha: 0.55),
+                                    color: palette.textSecondary,
                                   ),
                                 ),
                               ],
@@ -2370,7 +1579,7 @@ class StackPreviewCard extends StatelessWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 10),
+                      spacing.vGapSm,
                       Wrap(
                         spacing: 10,
                         runSpacing: 8,
@@ -2384,12 +1593,9 @@ class StackPreviewCard extends StatelessWidget {
                               backgroundColor: palette.primary,
                               foregroundColor: palette.onPrimary,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
+                                borderRadius: radius.sm.all,
                               ),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 10,
-                              ),
+                              padding: spacing.insetSquish,
                               elevation: 0,
                             ),
                           ),
@@ -2401,23 +1607,17 @@ class StackPreviewCard extends StatelessWidget {
                               ),
                               foregroundColor: palette.primary,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
+                                borderRadius: radius.sm.all,
                               ),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 10,
-                              ),
+                              padding: spacing.insetSquish,
                             ),
                             child: const Text('Tonal Accent'),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 7,
-                            ),
+                            padding: spacing.insetSquish,
                             decoration: BoxDecoration(
                               color: palette.primary.withValues(alpha: 0.10),
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: radius.sm.all,
                               border: Border.all(
                                 color: palette.primary.withValues(alpha: 0.40),
                               ),
@@ -2651,25 +1851,21 @@ class StackPreviewCard extends StatelessWidget {
                           Expanded(
                             child: Text(
                               'Uji tampilan modal dialog melayang:',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: palette.textMain.withValues(alpha: 0.65),
+                              style: text.bodySmall?.copyWith(
+                                color: palette.textSecondary,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          spacing.hGapSm,
                           InkWell(
                             onTap: () => _openDialogPreview(context, palette),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: radius.sm.all,
                             child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 7,
-                              ),
+                              padding: spacing.insetSquish,
                               decoration: BoxDecoration(
                                 color: palette.tonalButtonFill,
-                                borderRadius: BorderRadius.circular(8),
+                                borderRadius: radius.sm.all,
                                 border: Border.all(
                                   color: palette.primary.withValues(
                                     alpha: isDark ? 0.35 : 0.25,
@@ -2688,8 +1884,7 @@ class StackPreviewCard extends StatelessWidget {
                                   const SizedBox(width: 6),
                                   Text(
                                     'Open Dialog Preview (C4)',
-                                    style: TextStyle(
-                                      fontSize: 11.5,
+                                    style: text.labelSmall?.copyWith(
                                       fontWeight: FontWeight.w700,
                                       color: palette.tonalButtonText,
                                     ),
@@ -2700,13 +1895,13 @@ class StackPreviewCard extends StatelessWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 12),
+                      spacing.vGapSm,
 
                       // Inline Context Menu Mockup on Container 4
                       Container(
                         decoration: BoxDecoration(
                           color: palette.container4,
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: radius.lg.all,
                           border: Border.all(
                             color: isDark
                                 ? Colors.white.withValues(alpha: 0.12)
@@ -2723,7 +1918,7 @@ class StackPreviewCard extends StatelessWidget {
                             ),
                           ],
                         ),
-                        padding: const EdgeInsets.all(14),
+                        padding: spacing.insetMd,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -2734,42 +1929,36 @@ class StackPreviewCard extends StatelessWidget {
                                   size: 16,
                                   color: palette.textMain.withValues(alpha: 0.8),
                                 ),
-                                const SizedBox(width: 8),
+                                spacing.hGapSm,
                                 Expanded(
                                   child: Text(
                                     'Context Menu Mockup (C4)',
-                                    style: TextStyle(
-                                      fontSize: 12,
+                                    style: text.labelMedium?.copyWith(
                                       fontWeight: FontWeight.w700,
                                       color: palette.textMain,
                                     ),
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
-                                const SizedBox(width: 8),
+                                spacing.hGapSm,
                                 Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 6,
-                                    vertical: 2,
-                                  ),
+                                  padding: spacing.insetSquish,
                                   decoration: BoxDecoration(
                                     color: palette.textMain.withValues(alpha: 0.08),
-                                    borderRadius: BorderRadius.circular(6),
+                                    borderRadius: radius.xs.all,
                                   ),
                                   child: Text(
                                     'Popover',
-                                    style: TextStyle(
+                                    style: text.labelSmall?.copyWith(
                                       fontSize: 9.5,
                                       fontWeight: FontWeight.bold,
-                                      color: palette.textMain.withValues(
-                                        alpha: 0.75,
-                                      ),
+                                      color: palette.textSecondary,
                                     ),
                                   ),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 10),
+                            spacing.vGapSm,
                             // Menu items
                             _buildContextMenuItem(
                               icon: Icons.copy_rounded,
@@ -2784,17 +1973,17 @@ class StackPreviewCard extends StatelessWidget {
                               shortcut: 'Ctrl+G',
                               palette: palette,
                             ),
-                            const SizedBox(height: 12),
+                            spacing.vGapSm,
                             // Tonal Buttons INSIDE Container 4 (proving contrast on C4!)
                             Text(
                               'Tonal Buttons on C4 surface:',
                               style: TextStyle(
                                 fontSize: 10.5,
                                 fontStyle: FontStyle.italic,
-                                color: palette.textMain.withValues(alpha: 0.6),
+                                color: palette.textSecondary,
                               ),
                             ),
-                            const SizedBox(height: 8),
+                            spacing.vGapXs,
                             Wrap(
                               spacing: 8,
                               runSpacing: 6,
@@ -2802,15 +1991,12 @@ class StackPreviewCard extends StatelessWidget {
                                 // Active Tonal Button (C4)
                                 InkWell(
                                   onTap: () {},
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: radius.sm.all,
                                   child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 6,
-                                    ),
+                                    padding: spacing.insetSquish,
                                     decoration: BoxDecoration(
                                       color: palette.tonalButtonFill,
-                                      borderRadius: BorderRadius.circular(8),
+                                      borderRadius: radius.sm.all,
                                       border: Border.all(
                                         color: isDark
                                             ? Colors.white.withValues(alpha: 0.08)
@@ -2828,8 +2014,7 @@ class StackPreviewCard extends StatelessWidget {
                                         const SizedBox(width: 5),
                                         Text(
                                           'Tonal Button (C4)',
-                                          style: TextStyle(
-                                            fontSize: 11,
+                                          style: text.labelSmall?.copyWith(
                                             fontWeight: FontWeight.w700,
                                             color: palette.tonalButtonText,
                                           ),
@@ -2841,15 +2026,12 @@ class StackPreviewCard extends StatelessWidget {
 
                                 // Disabled Tonal Button (C4)
                                 Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 6,
-                                  ),
+                                  padding: spacing.insetSquish,
                                   decoration: BoxDecoration(
                                     color: palette.tonalButtonFill.withValues(
                                       alpha: 0.35,
                                     ),
-                                    borderRadius: BorderRadius.circular(8),
+                                    borderRadius: radius.sm.all,
                                     border: Border.all(
                                       color: palette.textFieldDisabledBorder,
                                       width: 1.0,
@@ -2866,8 +2048,7 @@ class StackPreviewCard extends StatelessWidget {
                                       const SizedBox(width: 5),
                                       Text(
                                         'Disabled Button (C4)',
-                                        style: TextStyle(
-                                          fontSize: 11,
+                                        style: text.labelSmall?.copyWith(
                                           fontWeight: FontWeight.w700,
                                           color: palette.textDisabled,
                                         ),
@@ -2886,7 +2067,7 @@ class StackPreviewCard extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 20),
+          spacing.vGapLg,
 
           // Mathematical Depth Breakdown Table
           _buildDepthHierarchyTable(context, palette),
@@ -3087,7 +2268,10 @@ class StackPreviewCard extends StatelessWidget {
               fontSize: 11,
               fontWeight: FontWeight.w800,
               color: highlight ? primaryColor : textColor,
-              fontFamily: 'monospace',
+              fontFeatures: const [
+                FontFeature.tabularFigures(),
+                FontFeature.slashedZero(),
+              ],
             ),
           ),
           Text(
@@ -3095,7 +2279,10 @@ class StackPreviewCard extends StatelessWidget {
             style: TextStyle(
               fontSize: 9.5,
               color: textColor.withValues(alpha: 0.6),
-              fontFamily: 'monospace',
+              fontFeatures: const [
+                FontFeature.tabularFigures(),
+                FontFeature.slashedZero(),
+              ],
             ),
           ),
         ],
@@ -3355,13 +2542,16 @@ class StackPreviewCard extends StatelessWidget {
   }
 
   void _openDialogPreview(BuildContext context, LayerPalette palette) {
+    final radius = context.radius;
+    final spacing = context.spacing;
+
     showDialog(
       context: context,
       builder: (dialogCtx) {
         return Dialog(
           backgroundColor: palette.container4,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: radius.xl.all,
             side: BorderSide(
               color: isDark
                   ? Colors.white.withValues(alpha: 0.12)
@@ -3374,7 +2564,7 @@ class StackPreviewCard extends StatelessWidget {
               ? Colors.black.withValues(alpha: 0.5)
               : Colors.black.withValues(alpha: 0.06),
           child: Padding(
-            padding: const EdgeInsets.all(22),
+            padding: spacing.insetLg,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -3382,10 +2572,10 @@ class StackPreviewCard extends StatelessWidget {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(8),
+                      padding: spacing.insetSquish,
                       decoration: BoxDecoration(
                         color: palette.tonalButtonFill,
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: radius.md.all,
                       ),
                       child: Icon(
                         Icons.layers_rounded,
@@ -3393,7 +2583,7 @@ class StackPreviewCard extends StatelessWidget {
                         color: palette.tonalButtonText,
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    spacing.hGapSm,
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -3419,7 +2609,7 @@ class StackPreviewCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 14),
+                spacing.vGapSm,
                 Text(
                   'Ini adalah modal dialog yang menggunakan Container 4 sebagai surface background. Di bawah ini terdapat Tonal Button yang dirancang agar tetap kontras dan terbaca jelas baik di atas Container 4 maupun Container 3.',
                   style: TextStyle(
@@ -3428,22 +2618,19 @@ class StackPreviewCard extends StatelessWidget {
                     height: 1.4,
                   ),
                 ),
-                const SizedBox(height: 20),
+                spacing.vGapMd,
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     // Tonal Button on Container 4
                     InkWell(
                       onTap: () => Navigator.of(dialogCtx).pop(),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: radius.sm.all,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 10,
-                        ),
+                        padding: spacing.insetSquish,
                         decoration: BoxDecoration(
                           color: palette.tonalButtonFill,
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: radius.sm.all,
                           border: Border.all(
                             color: isDark
                                 ? Colors.white.withValues(alpha: 0.08)
@@ -3471,19 +2658,16 @@ class StackPreviewCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    spacing.hGapSm,
                     // Primary Confirm Button
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: palette.primary,
                         foregroundColor: palette.onPrimary,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: radius.sm.all,
                         ),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 10,
-                        ),
+                        padding: spacing.insetSquish,
                         elevation: 0,
                       ),
                       onPressed: () => Navigator.of(dialogCtx).pop(),
