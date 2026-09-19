@@ -23,8 +23,14 @@ class ThemePreset {
   /// Corner radius scale preset.
   final ShapePreset shape;
 
+  /// Optional base corner radius anchor (default 12.0 for rounded, 0.0 for sharp).
+  final double? baseRadius;
+
   /// Spacing and insets density profile.
   final DensityPreset density;
+
+  /// Optional base spacing anchor (default 16.0 for comfortable, 10.0 for compact).
+  final double? baseSpacing;
 
   /// Optional custom font family (defaults to 'Inter').
   final String? fontFamily;
@@ -53,7 +59,9 @@ class ThemePreset {
     required this.darkAnchor,
     required this.primaryColor,
     this.shape = ShapePreset.rounded,
+    this.baseRadius,
     this.density = DensityPreset.comfortable,
+    this.baseSpacing,
     this.fontFamily,
     this.baseFontSize = 14.0,
     this.minFontWeight,
@@ -74,14 +82,16 @@ class ThemePreset {
     );
 
     // 2. Generate AppRadiusTheme
-    final radiusTheme = shape == ShapePreset.sharp
-        ? AppRadiusTheme.sharp()
-        : AppRadiusTheme.rounded();
+    final radiusTheme = AppRadiusTheme.create(
+      baseRadius: baseRadius ?? (shape == ShapePreset.sharp ? 0.0 : 12.0),
+      shape: shape,
+    );
 
     // 3. Generate AppSpacingTheme
-    final spacingTheme = density == DensityPreset.compact
-        ? AppSpacingTheme.compact()
-        : AppSpacingTheme.comfortable();
+    final spacingTheme = AppSpacingTheme.create(
+      baseSpacing: baseSpacing ?? (density == DensityPreset.compact ? 10.0 : 16.0),
+      density: density,
+    );
 
     // 4. Generate Typography
     final typographyTheme = typography ??
@@ -200,7 +210,9 @@ class ThemePreset {
     Color? darkAnchor,
     Color? primaryColor,
     ShapePreset? shape,
+    double? baseRadius,
     DensityPreset? density,
+    double? baseSpacing,
     String? fontFamily,
     double? baseFontSize,
     FontWeight? minFontWeight,
@@ -217,7 +229,9 @@ class ThemePreset {
       darkAnchor: darkAnchor ?? this.darkAnchor,
       primaryColor: primaryColor ?? this.primaryColor,
       shape: shape ?? this.shape,
+      baseRadius: baseRadius ?? this.baseRadius,
       density: density ?? this.density,
+      baseSpacing: baseSpacing ?? this.baseSpacing,
       fontFamily: fontFamily ?? this.fontFamily,
       baseFontSize: baseFontSize ?? this.baseFontSize,
       minFontWeight: clearMinFontWeight ? null : (minFontWeight ?? this.minFontWeight),

@@ -37,31 +37,53 @@ class AppSpacingTheme extends ThemeExtension<AppSpacingTheme> {
     this.touchTargetMin = 48.0,
   });
 
+  /// Snaps a double value to the nearest 0.5 step for crisp pixel alignment.
+  static double _snapToHalf(double value) => (value * 2).round() / 2;
+
   /// Comfortable preset: balanced for standard mobile and web interfaces.
-  factory AppSpacingTheme.comfortable() => const AppSpacingTheme(
-    insetSquish: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-    insetSm: EdgeInsets.all(8),
-    insetMd: EdgeInsets.all(16),
-    insetLg: EdgeInsets.all(24),
-    gapXs: 6,
-    gapSm: 12,
-    gapMd: 16,
-    gapLg: 24,
-    touchTargetMin: 48.0,
+  factory AppSpacingTheme.comfortable() => AppSpacingTheme.create(
+    baseSpacing: 16.0,
+    density: DensityPreset.comfortable,
   );
 
   /// Compact preset: pure high-density layout for desktop, spreadsheets, and admin tools.
-  factory AppSpacingTheme.compact() => const AppSpacingTheme(
-    insetSquish: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-    insetSm: EdgeInsets.all(4),
-    insetMd: EdgeInsets.all(10),
-    insetLg: EdgeInsets.all(16),
-    gapXs: 4,
-    gapSm: 6,
-    gapMd: 10,
-    gapLg: 16,
-    touchTargetMin: 0.0,
+  factory AppSpacingTheme.compact() => AppSpacingTheme.create(
+    baseSpacing: 10.0,
+    density: DensityPreset.compact,
   );
+
+  /// Creates an [AppSpacingTheme] scaling proportionally from a [baseSpacing] anchor.
+  /// Standard comfortable defaults to 16.0 base spacing; compact defaults to 10.0.
+  factory AppSpacingTheme.create({
+    double baseSpacing = 16.0,
+    DensityPreset density = DensityPreset.comfortable,
+  }) {
+    final isCompact = density == DensityPreset.compact;
+
+    // Multipliers relative to comfortable base 16
+    final gapXs = _snapToHalf(baseSpacing * (isCompact ? (4.0 / 10.0) : (6.0 / 16.0)));
+    final gapSm = _snapToHalf(baseSpacing * (isCompact ? (6.0 / 10.0) : (12.0 / 16.0)));
+    final gapMd = _snapToHalf(baseSpacing);
+    final gapLg = _snapToHalf(baseSpacing * (isCompact ? (16.0 / 10.0) : (24.0 / 16.0)));
+
+    final squishH = _snapToHalf(baseSpacing * (isCompact ? (8.0 / 10.0) : (14.0 / 16.0)));
+    final squishV = _snapToHalf(baseSpacing * (isCompact ? (4.0 / 10.0) : (10.0 / 16.0)));
+    final padSm = _snapToHalf(baseSpacing * (isCompact ? (4.0 / 10.0) : (8.0 / 16.0)));
+    final padMd = _snapToHalf(baseSpacing);
+    final padLg = _snapToHalf(baseSpacing * (isCompact ? (16.0 / 10.0) : (24.0 / 16.0)));
+
+    return AppSpacingTheme(
+      insetSquish: EdgeInsets.symmetric(horizontal: squishH, vertical: squishV),
+      insetSm: EdgeInsets.all(padSm),
+      insetMd: EdgeInsets.all(padMd),
+      insetLg: EdgeInsets.all(padLg),
+      gapXs: gapXs,
+      gapSm: gapSm,
+      gapMd: gapMd,
+      gapLg: gapLg,
+      touchTargetMin: isCompact ? 0.0 : 48.0,
+    );
+  }
 
   // Ergonomic SizedBox widget shortcuts
   SizedBox get vGapXs => SizedBox(height: gapXs);

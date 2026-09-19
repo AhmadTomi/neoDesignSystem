@@ -90,6 +90,28 @@ class AppThemeController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Set or update the base rounded corner radius on the fly.
+  /// Proportionally scales all corner radii (none, xs, sm, md, lg, xl).
+  void setBaseRounded(double radius) {
+    if (_currentPreset.baseRadius == radius) return;
+    _currentPreset = _currentPreset.copyWith(
+      baseRadius: radius,
+      shape: radius <= 0 ? ShapePreset.sharp : ShapePreset.rounded,
+    );
+    notifyListeners();
+  }
+
+  /// Alias for [setBaseRounded].
+  void setBaseRadius(double radius) => setBaseRounded(radius);
+
+  /// Set or update the base spacing distance on the fly.
+  /// Proportionally scales all gaps (xs, sm, md, lg) and insets (squish, sm, md, lg).
+  void setBaseSpacing(double spacing) {
+    if (_currentPreset.baseSpacing == spacing) return;
+    _currentPreset = _currentPreset.copyWith(baseSpacing: spacing);
+    notifyListeners();
+  }
+
   /// Set or update the base font size on the fly.
   void setBaseFontSize(double size) {
     if (_currentPreset.baseFontSize == size) return;

@@ -12,7 +12,9 @@ class ThemeConfig {
   final String darkAnchorHex;
   final String primaryHex;
   final String shape;
+  final double? baseRadius;
   final String density;
+  final double? baseSpacing;
   final String? fontFamily;
   final double baseFontSize;
   final int? minFontWeightValue;
@@ -25,7 +27,9 @@ class ThemeConfig {
     required this.darkAnchorHex,
     required this.primaryHex,
     required this.shape,
+    this.baseRadius,
     required this.density,
+    this.baseSpacing,
     this.fontFamily,
     this.baseFontSize = 14.0,
     this.minFontWeightValue,
@@ -41,7 +45,9 @@ class ThemeConfig {
       darkAnchorHex: _colorToHex(preset.darkAnchor),
       primaryHex: _colorToHex(preset.primaryColor),
       shape: preset.shape == ShapePreset.sharp ? 'sharp' : 'rounded',
+      baseRadius: preset.baseRadius,
       density: preset.density == DensityPreset.compact ? 'compact' : 'comfortable',
+      baseSpacing: preset.baseSpacing,
       fontFamily: preset.fontFamily,
       baseFontSize: preset.baseFontSize,
       minFontWeightValue: preset.minFontWeight?.value,
@@ -58,7 +64,9 @@ class ThemeConfig {
       darkAnchor: _parseHex(darkAnchorHex),
       primaryColor: _parseHex(primaryHex),
       shape: shape == 'sharp' ? ShapePreset.sharp : ShapePreset.rounded,
+      baseRadius: baseRadius,
       density: density == 'compact' ? DensityPreset.compact : DensityPreset.comfortable,
+      baseSpacing: baseSpacing,
       fontFamily: fontFamily,
       baseFontSize: baseFontSize,
       minFontWeight: minFontWeightValue != null
@@ -77,7 +85,9 @@ class ThemeConfig {
     'darkAnchorHex': darkAnchorHex,
     'primaryHex': primaryHex,
     'shape': shape,
+    if (baseRadius != null) 'baseRadius': baseRadius,
     'density': density,
+    if (baseSpacing != null) 'baseSpacing': baseSpacing,
     if (fontFamily != null) 'fontFamily': fontFamily,
     'baseFontSize': baseFontSize,
     if (minFontWeightValue != null) 'minFontWeightValue': minFontWeightValue,
@@ -93,7 +103,9 @@ class ThemeConfig {
       darkAnchorHex: json['darkAnchorHex'] as String? ?? '#101010',
       primaryHex: json['primaryHex'] as String? ?? '#2563EB',
       shape: json['shape'] as String? ?? 'rounded',
+      baseRadius: (json['baseRadius'] as num?)?.toDouble(),
       density: json['density'] as String? ?? 'comfortable',
+      baseSpacing: (json['baseSpacing'] as num?)?.toDouble(),
       fontFamily: json['fontFamily'] as String?,
       baseFontSize: (json['baseFontSize'] as num?)?.toDouble() ?? 14.0,
       minFontWeightValue: json['minFontWeightValue'] as int?,

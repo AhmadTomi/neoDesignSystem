@@ -638,5 +638,45 @@ void main() {
       final themeReset = controller.currentPreset.toThemeData(isDark: false);
       expect(themeReset.textTheme.bodyMedium?.fontWeight, FontWeight.w400);
     });
+
+    test('AppRadiusTheme and AppSpacingTheme scale dynamically from base anchors on-the-fly', () {
+      // 1. Radius scaling
+      final customRadius = AppRadiusTheme.create(baseRadius: 18.0);
+      expect(customRadius.md.value, 18.0);
+      expect(customRadius.xs.value, 6.0); // 18 * (4/12)
+      expect(customRadius.lg.value, 24.0); // 18 * (16/12)
+
+      // Sharp radius
+      final sharpRadius = AppRadiusTheme.create(baseRadius: 0.0);
+      expect(sharpRadius.md.value, 0.0);
+      expect(sharpRadius.lg.value, 0.0);
+
+      // 2. Spacing scaling
+      final customSpacing = AppSpacingTheme.create(baseSpacing: 20.0);
+      expect(customSpacing.gapMd, 20.0);
+      expect(customSpacing.gapSm, 15.0); // 20 * (12/16)
+      expect(customSpacing.gapLg, 30.0); // 20 * (24/16)
+
+      // 3. Controller on-the-fly adjustments
+      final controller = AppThemeController();
+      controller.setBaseRounded(18.0);
+      expect(controller.currentPreset.baseRadius, 18.0);
+      expect(controller.shape, ShapePreset.rounded);
+
+      final themeWithRadius = controller.currentPreset.toThemeData(isDark: false);
+      final radiusExt = themeWithRadius.extension<AppRadiusTheme>();
+      expect(radiusExt?.md.value, 18.0);
+
+      controller.setBaseSpacing(24.0);
+      expect(controller.currentPreset.baseSpacing, 24.0);
+
+      final themeWithSpacing = controller.currentPreset.toThemeData(isDark: false);
+      final spacingExt = themeWithSpacing.extension<AppSpacingTheme>();
+      expect(spacingExt?.gapMd, 24.0);
+
+      // 4. Test setting zero radius switches to sharp
+      controller.setBaseRounded(0.0);
+      expect(controller.shape, ShapePreset.sharp);
+    });
   });
 }

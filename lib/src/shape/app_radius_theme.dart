@@ -65,16 +65,11 @@ class AppRadiusTheme extends ThemeExtension<AppRadiusTheme> {
     this.full = const CornerRadius(9999),
   });
 
+  /// Snaps a double value to the nearest 0.5 step for crisp pixel alignment.
+  static double _snapToHalf(double value) => (value * 2).round() / 2;
+
   /// Modern rounded preset (friendly, rounded surfaces).
-  factory AppRadiusTheme.rounded() => const AppRadiusTheme(
-    none: CornerRadius(0),
-    xs: CornerRadius(4),
-    sm: CornerRadius(8),
-    md: CornerRadius(12),
-    lg: CornerRadius(16),
-    xl: CornerRadius(24),
-    full: CornerRadius(9999),
-  );
+  factory AppRadiusTheme.rounded() => AppRadiusTheme.create(baseRadius: 12.0, shape: ShapePreset.rounded);
 
   /// Sharp enterprise preset (crisp, subtle radii for data-dense tools).
   factory AppRadiusTheme.sharp() => const AppRadiusTheme(
@@ -86,6 +81,26 @@ class AppRadiusTheme extends ThemeExtension<AppRadiusTheme> {
     xl: CornerRadius(0),
     full: CornerRadius(0),
   );
+
+  /// Creates an [AppRadiusTheme] scaling proportionally from a [baseRadius] (default 12.0).
+  /// If [shape] is [ShapePreset.sharp] or [baseRadius] is 0, returns a sharp radius theme.
+  factory AppRadiusTheme.create({
+    double baseRadius = 12.0,
+    ShapePreset shape = ShapePreset.rounded,
+  }) {
+    if (shape == ShapePreset.sharp || baseRadius <= 0) {
+      return AppRadiusTheme.sharp();
+    }
+    return AppRadiusTheme(
+      none: const CornerRadius(0),
+      xs: CornerRadius(_snapToHalf(baseRadius * (4.0 / 12.0))),
+      sm: CornerRadius(_snapToHalf(baseRadius * (8.0 / 12.0))),
+      md: CornerRadius(_snapToHalf(baseRadius)),
+      lg: CornerRadius(_snapToHalf(baseRadius * (16.0 / 12.0))),
+      xl: CornerRadius(_snapToHalf(baseRadius * (24.0 / 12.0))),
+      full: const CornerRadius(9999),
+    );
+  }
 
   /// Calculates nested concentric corner radius: R_inner = max(0, R_outer - padding)
   CornerRadius nested({required CornerRadius outer, required double padding}) {
