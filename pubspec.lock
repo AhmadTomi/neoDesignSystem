@@ -134,9 +134,11 @@ packages:
   neo_color_picker:
     dependency: "direct main"
     description:
-      path: "../neo_color_picker"
-      relative: true
-    source: path
+      path: "."
+      ref: HEAD
+      resolved-ref: "99e51d2ec6d25cd2e28b4cb0f0fed5872cba22a0"
+      url: "https://github.com/AhmadTomi/neoColorPicker.git"
+    source: git
     version: "0.0.1"
   path:
     dependency: transitive
