@@ -14,6 +14,8 @@ class ThemeConfig {
   final String shape;
   final String density;
   final String? fontFamily;
+  final double baseFontSize;
+  final int? minFontWeightValue;
 
   const ThemeConfig({
     required this.id,
@@ -25,6 +27,8 @@ class ThemeConfig {
     required this.shape,
     required this.density,
     this.fontFamily,
+    this.baseFontSize = 14.0,
+    this.minFontWeightValue,
   });
 
   /// Creates a [ThemeConfig] from a [ThemePreset].
@@ -39,6 +43,8 @@ class ThemeConfig {
       shape: preset.shape == ShapePreset.sharp ? 'sharp' : 'rounded',
       density: preset.density == DensityPreset.compact ? 'compact' : 'comfortable',
       fontFamily: preset.fontFamily,
+      baseFontSize: preset.baseFontSize,
+      minFontWeightValue: preset.minFontWeight?.value,
     );
   }
 
@@ -54,6 +60,10 @@ class ThemeConfig {
       shape: shape == 'sharp' ? ShapePreset.sharp : ShapePreset.rounded,
       density: density == 'compact' ? DensityPreset.compact : DensityPreset.comfortable,
       fontFamily: fontFamily,
+      baseFontSize: baseFontSize,
+      minFontWeight: minFontWeightValue != null
+          ? FontWeight.values.where((w) => w.value == minFontWeightValue).firstOrNull
+          : null,
       isBuiltIn: false,
     );
   }
@@ -69,6 +79,8 @@ class ThemeConfig {
     'shape': shape,
     'density': density,
     if (fontFamily != null) 'fontFamily': fontFamily,
+    'baseFontSize': baseFontSize,
+    if (minFontWeightValue != null) 'minFontWeightValue': minFontWeightValue,
   };
 
   /// Deserializes from JSON map.
@@ -83,6 +95,8 @@ class ThemeConfig {
       shape: json['shape'] as String? ?? 'rounded',
       density: json['density'] as String? ?? 'comfortable',
       fontFamily: json['fontFamily'] as String?,
+      baseFontSize: (json['baseFontSize'] as num?)?.toDouble() ?? 14.0,
+      minFontWeightValue: json['minFontWeightValue'] as int?,
     );
   }
 

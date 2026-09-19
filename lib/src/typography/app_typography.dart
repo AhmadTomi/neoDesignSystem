@@ -32,63 +32,86 @@ class AppTypography {
     required this.labelSm,
   });
 
-  /// Factory creating font geometry tailored for comfortable or compact density.
+  /// Snaps a double value to the nearest 0.5 step for crisp pixel alignment.
+  static double _snapToHalf(double value) => (value * 2).round() / 2;
+
+  /// Multiplier ratios relative to [baseFontSize] (derived from standard 14.0 base).
+  static const double titleLgMultiplier = 20.0 / 14.0;
+  static const double titleMdMultiplier = 16.0 / 14.0;
+  static const double titleSmMultiplier = 1.0;
+  static const double bodyLgMultiplier = 16.0 / 14.0;
+  static const double bodyMdMultiplier = 1.0;
+  static const double bodySmMultiplier = 13.0 / 14.0;
+  static const double labelMdMultiplier = 13.0 / 14.0;
+  static const double labelSmMultiplier = 11.0 / 14.0;
+
+  /// Factory creating font geometry tailored for comfortable or compact density
+  /// derived proportionally from a single [baseFontSize] anchor, with optional [minFontWeight] clamping.
   factory AppTypography.create({
     String fontFamily = 'Inter',
+    double baseFontSize = 14.0,
     bool isCompact = false,
+    FontWeight? minFontWeight,
   }) {
+    final double effectiveBase = isCompact ? baseFontSize - 1.0 : baseFontSize;
+
     final double hTitle = isCompact ? 1.20 : 1.35;
     final double hBody = isCompact ? 1.20 : 1.45;
     final double hLabel = isCompact ? 1.10 : 1.20;
+
+    FontWeight clampWeight(FontWeight original) {
+      if (minFontWeight == null) return original;
+      return original.value < minFontWeight.value ? minFontWeight : original;
+    }
 
     return AppTypography(
       fontFamily: fontFamily,
       titleLg: TextStyle(
         fontFamily: fontFamily,
-        fontSize: isCompact ? 18 : 20,
-        fontWeight: FontWeight.w600,
+        fontSize: _snapToHalf(effectiveBase * titleLgMultiplier),
+        fontWeight: clampWeight(FontWeight.w600),
         height: hTitle,
       ),
       titleMd: TextStyle(
         fontFamily: fontFamily,
-        fontSize: isCompact ? 15 : 16,
-        fontWeight: FontWeight.w600,
+        fontSize: _snapToHalf(effectiveBase * titleMdMultiplier),
+        fontWeight: clampWeight(FontWeight.w600),
         height: hTitle,
       ),
       titleSm: TextStyle(
         fontFamily: fontFamily,
-        fontSize: isCompact ? 13 : 14,
-        fontWeight: FontWeight.w600,
+        fontSize: _snapToHalf(effectiveBase * titleSmMultiplier),
+        fontWeight: clampWeight(FontWeight.w600),
         height: hTitle,
       ),
       bodyLg: TextStyle(
         fontFamily: fontFamily,
-        fontSize: isCompact ? 15 : 16,
-        fontWeight: FontWeight.w400,
+        fontSize: _snapToHalf(effectiveBase * bodyLgMultiplier),
+        fontWeight: clampWeight(FontWeight.w400),
         height: hBody,
       ),
       bodyMd: TextStyle(
         fontFamily: fontFamily,
-        fontSize: isCompact ? 13.5 : 14,
-        fontWeight: FontWeight.w400,
+        fontSize: _snapToHalf(effectiveBase * bodyMdMultiplier),
+        fontWeight: clampWeight(FontWeight.w400),
         height: hBody,
       ),
       bodySm: TextStyle(
         fontFamily: fontFamily,
-        fontSize: isCompact ? 12 : 13,
-        fontWeight: FontWeight.w400,
+        fontSize: _snapToHalf(effectiveBase * bodySmMultiplier),
+        fontWeight: clampWeight(FontWeight.w400),
         height: hBody,
       ),
       labelMd: TextStyle(
         fontFamily: fontFamily,
-        fontSize: isCompact ? 12 : 13,
-        fontWeight: FontWeight.w500,
+        fontSize: _snapToHalf(effectiveBase * labelMdMultiplier),
+        fontWeight: clampWeight(FontWeight.w500),
         height: hLabel,
       ),
       labelSm: TextStyle(
         fontFamily: fontFamily,
-        fontSize: isCompact ? 10.5 : 11,
-        fontWeight: FontWeight.w500,
+        fontSize: _snapToHalf(effectiveBase * labelSmMultiplier),
+        fontWeight: clampWeight(FontWeight.w500),
         height: hLabel,
       ),
     );
@@ -107,6 +130,23 @@ class AppTypography {
       labelLarge: labelMd.withMain(textMain),
       labelMedium: labelMd.withSecondary(textMain),
       labelSmall: labelSm.withMuted(textMain),
+    );
+  }
+
+  /// Returns a new [AppTypography] where all styles with a [FontWeight] below [minWeight]
+  /// are elevated to [minWeight], while styles already at or above [minWeight] remain untouched.
+  AppTypography withMinWeight(FontWeight? minWeight) {
+    if (minWeight == null) return this;
+    return AppTypography(
+      fontFamily: fontFamily,
+      titleLg: titleLg.clampMinWeight(minWeight)!,
+      titleMd: titleMd.clampMinWeight(minWeight)!,
+      titleSm: titleSm.clampMinWeight(minWeight)!,
+      bodyLg: bodyLg.clampMinWeight(minWeight)!,
+      bodyMd: bodyMd.clampMinWeight(minWeight)!,
+      bodySm: bodySm.clampMinWeight(minWeight)!,
+      labelMd: labelMd.clampMinWeight(minWeight)!,
+      labelSm: labelSm.clampMinWeight(minWeight)!,
     );
   }
 

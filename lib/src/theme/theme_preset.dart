@@ -29,6 +29,13 @@ class ThemePreset {
   /// Optional custom font family (defaults to 'Inter').
   final String? fontFamily;
 
+  /// Base font size anchor for typography (defaults to 14.0).
+  final double baseFontSize;
+
+  /// Optional minimum font weight clamp. When set, all styles with a weight below this
+  /// are automatically elevated to this weight.
+  final FontWeight? minFontWeight;
+
   /// Optional typography geometry override.
   final AppTypography? typography;
 
@@ -48,6 +55,8 @@ class ThemePreset {
     this.shape = ShapePreset.rounded,
     this.density = DensityPreset.comfortable,
     this.fontFamily,
+    this.baseFontSize = 14.0,
+    this.minFontWeight,
     this.typography,
     this.themeModifier,
     this.isBuiltIn = false,
@@ -78,7 +87,9 @@ class ThemePreset {
     final typographyTheme = typography ??
         AppTypography.create(
           fontFamily: fontFamily ?? 'Inter',
+          baseFontSize: baseFontSize,
           isCompact: density == DensityPreset.compact,
+          minFontWeight: minFontWeight,
         );
 
     // 5. Bundle into ThemeTokens
@@ -191,6 +202,9 @@ class ThemePreset {
     ShapePreset? shape,
     DensityPreset? density,
     String? fontFamily,
+    double? baseFontSize,
+    FontWeight? minFontWeight,
+    bool clearMinFontWeight = false,
     AppTypography? typography,
     ThemeModifier? themeModifier,
     bool? isBuiltIn,
@@ -205,6 +219,8 @@ class ThemePreset {
       shape: shape ?? this.shape,
       density: density ?? this.density,
       fontFamily: fontFamily ?? this.fontFamily,
+      baseFontSize: baseFontSize ?? this.baseFontSize,
+      minFontWeight: clearMinFontWeight ? null : (minFontWeight ?? this.minFontWeight),
       typography: typography ?? this.typography,
       themeModifier: themeModifier ?? this.themeModifier,
       isBuiltIn: isBuiltIn ?? this.isBuiltIn,

@@ -570,5 +570,73 @@ void main() {
       final imported = controller.importPresetFromJson(jsonStr);
       expect(imported.id, BuiltInPresets.emerald.id);
     });
+
+    test('AppTypography scales dynamically and proportionally from baseFontSize', () {
+      // 1. Standard base 14
+      final typo14 = AppTypography.create(baseFontSize: 14.0, isCompact: false);
+      expect(typo14.titleLg.fontSize, 20.0);
+      expect(typo14.titleMd.fontSize, 16.0);
+      expect(typo14.titleSm.fontSize, 14.0);
+      expect(typo14.bodyLg.fontSize, 16.0);
+      expect(typo14.bodyMd.fontSize, 14.0);
+      expect(typo14.bodySm.fontSize, 13.0);
+      expect(typo14.labelMd.fontSize, 13.0);
+      expect(typo14.labelSm.fontSize, 11.0);
+
+      // 2. Scaled up base 16 (Accessibility / Large mode)
+      final typo16 = AppTypography.create(baseFontSize: 16.0, isCompact: false);
+      expect(typo16.titleSm.fontSize, 16.0); // 16 * 1.0 = 16
+      expect(typo16.titleLg.fontSize, closeTo(16.0 * (20 / 14), 0.5)); // ~23.0
+      expect(typo16.titleLg.fontSize! > typo14.titleLg.fontSize!, isTrue);
+      expect(typo16.bodyMd.fontSize! > typo14.bodyMd.fontSize!, isTrue);
+
+      // 3. Compact mode with base 14 (effective base = 13.0)
+      final typoCompact = AppTypography.create(baseFontSize: 14.0, isCompact: true);
+      expect(typoCompact.titleSm.fontSize, 13.0);
+      expect(typoCompact.titleLg.fontSize, closeTo(13.0 * (20 / 14), 0.5)); // ~18.5
+      expect(typoCompact.titleLg.fontSize! < typo14.titleLg.fontSize!, isTrue);
+
+      // 4. Verification in ThemePreset integration
+      final presetCustomSize = BuiltInPresets.slate.copyWith(baseFontSize: 18.0);
+      final themeData = presetCustomSize.toThemeData(isDark: false);
+      expect(themeData.textTheme.titleSmall?.fontSize, 18.0);
+    });
+
+    test('AppTypography clamps minFontWeight and supports on-the-fly switching', () {
+      // 1. Default without clamp: body is w400, label is w500, title is w600
+      final defaultTypo = AppTypography.create();
+      expect(defaultTypo.bodyMd.fontWeight, FontWeight.w400);
+      expect(defaultTypo.labelMd.fontWeight, FontWeight.w500);
+      expect(defaultTypo.titleLg.fontWeight, FontWeight.w600);
+
+      // 2. Clamped with w600: body and label elevated to w600; title remains w600
+      final clampedTypo = AppTypography.create(minFontWeight: FontWeight.w600);
+      expect(clampedTypo.bodyMd.fontWeight, FontWeight.w600);
+      expect(clampedTypo.bodySm.fontWeight, FontWeight.w600);
+      expect(clampedTypo.labelMd.fontWeight, FontWeight.w600);
+      expect(clampedTypo.titleLg.fontWeight, FontWeight.w600);
+
+      // 3. Clamping via withMinWeight method
+      final dynamicClamped = defaultTypo.withMinWeight(FontWeight.w600);
+      expect(dynamicClamped.bodyMd.fontWeight, FontWeight.w600);
+      expect(dynamicClamped.titleLg.fontWeight, FontWeight.w600);
+
+      // 4. On-the-fly switching via AppThemeController
+      final controller = AppThemeController();
+      expect(controller.currentPreset.minFontWeight, isNull);
+
+      // Elevate on-the-fly
+      controller.setMinFontWeight(FontWeight.w600);
+      expect(controller.currentPreset.minFontWeight, FontWeight.w600);
+      final themeClamped = controller.currentPreset.toThemeData(isDark: false);
+      expect(themeClamped.textTheme.bodyMedium?.fontWeight, FontWeight.w600);
+      expect(themeClamped.textTheme.titleSmall?.fontWeight, FontWeight.w600);
+
+      // Reset on-the-fly
+      controller.setMinFontWeight(null);
+      expect(controller.currentPreset.minFontWeight, isNull);
+      final themeReset = controller.currentPreset.toThemeData(isDark: false);
+      expect(themeReset.textTheme.bodyMedium?.fontWeight, FontWeight.w400);
+    });
   });
 }

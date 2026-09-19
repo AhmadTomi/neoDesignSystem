@@ -90,6 +90,25 @@ class AppThemeController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Set or update the base font size on the fly.
+  void setBaseFontSize(double size) {
+    if (_currentPreset.baseFontSize == size) return;
+    _currentPreset = _currentPreset.copyWith(baseFontSize: size);
+    notifyListeners();
+  }
+
+  /// Set, clamp, or clear the minimum font weight on the fly.
+  /// When set to a weight (e.g., [FontWeight.w600]), any style below this weight
+  /// is elevated, while styles at or above remain untouched. Pass `null` to reset.
+  void setMinFontWeight(FontWeight? minWeight) {
+    if (_currentPreset.minFontWeight == minWeight) return;
+    _currentPreset = _currentPreset.copyWith(
+      minFontWeight: minWeight,
+      clearMinFontWeight: minWeight == null,
+    );
+    notifyListeners();
+  }
+
   /// Save current configuration as a new custom preset.
   ThemePreset saveCustomPreset(String name, {String description = ''}) {
     final newId = 'custom_${DateTime.now().millisecondsSinceEpoch}';

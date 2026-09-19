@@ -36,4 +36,16 @@ extension SingleFontFeaturesX on TextStyle? {
   /// Applies disabled color (38% alpha [textMain]) for non-interactive elements.
   TextStyle? withDisabled(Color textMain) =>
       this?.copyWith(color: textMain.withValues(alpha: 0.38));
+
+  /// Clamps this TextStyle's font weight to be at least [minWeight].
+  /// If the current font weight is below [minWeight], it is elevated to [minWeight].
+  /// If the current font weight is greater than or equal to [minWeight], it remains unchanged.
+  TextStyle? clampMinWeight(FontWeight? minWeight) {
+    if (minWeight == null || this == null) return this;
+    final current = this!.fontWeight ?? FontWeight.w400;
+    if (current.value < minWeight.value) {
+      return this!.copyWith(fontWeight: minWeight);
+    }
+    return this;
+  }
 }
