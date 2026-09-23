@@ -1,6 +1,8 @@
-name: neo_design_system
-description: "Modular, mathematical OKLCH-based design system with multi-density spacing, directional radius, single-font OpenType typography, and on-the-fly theming."
-publish_to: 'none'
+name: neo_design_system_example
+description: "A new Flutter project."
+# The following line prevents the package from being accidentally published to
+# pub.dev using `flutter pub publish`. This is preferred for private packages.
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
@@ -30,7 +32,11 @@ dependencies:
     sdk: flutter
 
   cupertino_icons: ^1.0.8
-
+  neo_design_system:
+    path: ../
+  neo_color_picker:
+    git:
+      url: https://github.com/AhmadTomi/neoColorPicker.git
 
 dev_dependencies:
   flutter_test:

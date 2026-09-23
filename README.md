@@ -14,7 +14,7 @@
 - 📏 **Multi-Density Spacing**: Switch between balanced **Comfortable** density and **Pure Dense Compact** layout (zero minimum touch target constraint, tailored for desktop/data-heavy dashboards).
 - 🔤 **Single-Font OpenType Typography**: Eliminate extra monospace font weights by chaining OpenType features `.tabular` (tabular figures) and `.slashZero` (slashed zeros) directly on any `TextStyle`.
 - 🔄 **On-the-Fly Theming & Modifiers**: Live preset switching, editing, JSON export/import, and dynamic `themeModifier: (baseTheme, tokens) => ...` giving full access to active tokens without hardcoded values.
-- 🎛️ **Interactive Theme Playground**: Built-in interactive workbench (`lib/main.dart`) to inspect layers, tweak anchor colors, toggle shapes and density, and preview live components.
+- 🎛️ **Interactive Theme Playground**: Built-in interactive workbench (`example/lib/main.dart`) to inspect layers, tweak anchor colors, toggle shapes and density, and preview live components.
 
 ---
 
