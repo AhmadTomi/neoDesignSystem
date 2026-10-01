@@ -408,6 +408,53 @@ void main() {
       expect(theme.appBarTheme.elevation, 0);
     });
 
+    test('ThemePreset directly configures errorColor, warningColor, infoColor, and successColor', () {
+      const customError = Color(0xFFDC2626);
+      const customWarning = Color(0xFFD97706);
+      const customInfo = Color(0xFF0284C7);
+      const customSuccess = Color(0xFF16A34A);
+
+      final preset = ThemePreset(
+        id: 'test_semantic',
+        name: 'Semantic Preset',
+        lightAnchor: const Color(0xFFF4F5F7),
+        darkAnchor: const Color(0xFF101010),
+        primaryColor: const Color(0xFF3B82F6),
+        errorColor: customError,
+        warningColor: customWarning,
+        infoColor: customInfo,
+        successColor: customSuccess,
+      );
+
+      final lightTheme = preset.toThemeData(isDark: false);
+      final lightColor = lightTheme.extension<AppColorTheme>()!;
+
+      // Verify mathematical derivation clamps and applies without errors
+      expect(lightColor.error, isNotNull);
+      expect(lightColor.warning, isNotNull);
+      expect(lightColor.info, isNotNull);
+      expect(lightColor.success, isNotNull);
+
+      // Verify ColorScheme gets the calculated semantic tokens
+      expect(lightTheme.colorScheme.error, lightColor.error);
+      expect(lightTheme.colorScheme.onError, lightColor.onError);
+
+      // Verify InputDecorationTheme error borders get the calculated error token
+      expect(lightTheme.inputDecorationTheme.errorBorder?.borderSide.color, lightColor.error);
+      expect(lightTheme.inputDecorationTheme.focusedErrorBorder?.borderSide.color, lightColor.error);
+
+      // Verify controller semantic updates on the fly
+      final controller = AppThemeController(initialPreset: preset);
+      controller.updateErrorColor(const Color(0xFFB91C1C));
+      expect(controller.currentPreset.errorColor, const Color(0xFFB91C1C));
+      controller.updateWarningColor(const Color(0xFFB45309));
+      expect(controller.currentPreset.warningColor, const Color(0xFFB45309));
+      controller.updateInfoColor(const Color(0xFF0369A1));
+      expect(controller.currentPreset.infoColor, const Color(0xFF0369A1));
+      controller.updateSuccessColor(const Color(0xFF15803D));
+      expect(controller.currentPreset.successColor, const Color(0xFF15803D));
+    });
+
     test('ThemeConfig JSON serialization and deserialization', () {
       final originalConfig = ThemeConfig(
         id: 'emerald',

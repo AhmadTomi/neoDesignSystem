@@ -90,6 +90,30 @@ class AppThemeController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Update the error semantic color on the fly.
+  void updateErrorColor(Color color) {
+    _currentPreset = _currentPreset.copyWith(errorColor: color);
+    notifyListeners();
+  }
+
+  /// Update the warning semantic color on the fly.
+  void updateWarningColor(Color color) {
+    _currentPreset = _currentPreset.copyWith(warningColor: color);
+    notifyListeners();
+  }
+
+  /// Update the info semantic color on the fly.
+  void updateInfoColor(Color color) {
+    _currentPreset = _currentPreset.copyWith(infoColor: color);
+    notifyListeners();
+  }
+
+  /// Update the success semantic color on the fly.
+  void updateSuccessColor(Color color) {
+    _currentPreset = _currentPreset.copyWith(successColor: color);
+    notifyListeners();
+  }
+
   /// Set or update the base rounded corner radius on the fly.
   /// Proportionally scales all corner radii (none, xs, sm, md, lg, xl).
   void setBaseRounded(double radius) {

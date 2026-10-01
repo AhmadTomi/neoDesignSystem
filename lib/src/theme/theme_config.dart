@@ -11,6 +11,10 @@ class ThemeConfig {
   final String lightAnchorHex;
   final String darkAnchorHex;
   final String primaryHex;
+  final String? errorHex;
+  final String? warningHex;
+  final String? infoHex;
+  final String? successHex;
   final String shape;
   final double? baseRadius;
   final String density;
@@ -26,6 +30,10 @@ class ThemeConfig {
     required this.lightAnchorHex,
     required this.darkAnchorHex,
     required this.primaryHex,
+    this.errorHex,
+    this.warningHex,
+    this.infoHex,
+    this.successHex,
     required this.shape,
     this.baseRadius,
     required this.density,
@@ -44,6 +52,10 @@ class ThemeConfig {
       lightAnchorHex: _colorToHex(preset.lightAnchor),
       darkAnchorHex: _colorToHex(preset.darkAnchor),
       primaryHex: _colorToHex(preset.primaryColor),
+      errorHex: preset.errorColor != null ? _colorToHex(preset.errorColor!) : null,
+      warningHex: preset.warningColor != null ? _colorToHex(preset.warningColor!) : null,
+      infoHex: preset.infoColor != null ? _colorToHex(preset.infoColor!) : null,
+      successHex: preset.successColor != null ? _colorToHex(preset.successColor!) : null,
       shape: preset.shape == ShapePreset.sharp ? 'sharp' : 'rounded',
       baseRadius: preset.baseRadius,
       density: preset.density == DensityPreset.compact ? 'compact' : 'comfortable',
@@ -63,6 +75,10 @@ class ThemeConfig {
       lightAnchor: _parseHex(lightAnchorHex),
       darkAnchor: _parseHex(darkAnchorHex),
       primaryColor: _parseHex(primaryHex),
+      errorColor: errorHex != null ? _parseHex(errorHex!) : null,
+      warningColor: warningHex != null ? _parseHex(warningHex!) : null,
+      infoColor: infoHex != null ? _parseHex(infoHex!) : null,
+      successColor: successHex != null ? _parseHex(successHex!) : null,
       shape: shape == 'sharp' ? ShapePreset.sharp : ShapePreset.rounded,
       baseRadius: baseRadius,
       density: density == 'compact' ? DensityPreset.compact : DensityPreset.comfortable,
@@ -84,6 +100,10 @@ class ThemeConfig {
     'lightAnchorHex': lightAnchorHex,
     'darkAnchorHex': darkAnchorHex,
     'primaryHex': primaryHex,
+    if (errorHex != null) 'errorHex': errorHex,
+    if (warningHex != null) 'warningHex': warningHex,
+    if (infoHex != null) 'infoHex': infoHex,
+    if (successHex != null) 'successHex': successHex,
     'shape': shape,
     if (baseRadius != null) 'baseRadius': baseRadius,
     'density': density,
@@ -102,6 +122,10 @@ class ThemeConfig {
       lightAnchorHex: json['lightAnchorHex'] as String? ?? '#F4F5F7',
       darkAnchorHex: json['darkAnchorHex'] as String? ?? '#101010',
       primaryHex: json['primaryHex'] as String? ?? '#2563EB',
+      errorHex: json['errorHex'] as String?,
+      warningHex: json['warningHex'] as String?,
+      infoHex: json['infoHex'] as String?,
+      successHex: json['successHex'] as String?,
       shape: json['shape'] as String? ?? 'rounded',
       baseRadius: (json['baseRadius'] as num?)?.toDouble(),
       density: json['density'] as String? ?? 'comfortable',

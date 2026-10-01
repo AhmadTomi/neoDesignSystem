@@ -74,6 +74,10 @@ class _OklchPaletteDemoAppState extends State<OklchPaletteDemoApp> {
     _lightAnchorColor = preset.lightAnchor;
     _darkAnchorColor = preset.darkAnchor;
     _primaryColor = preset.primaryColor;
+    if (preset.errorColor != null) _errorColor = preset.errorColor!;
+    if (preset.warningColor != null) _warningColor = preset.warningColor!;
+    if (preset.infoColor != null) _infoColor = preset.infoColor!;
+    if (preset.successColor != null) _successColor = preset.successColor!;
 
     final oklchL = OklchColor.fromColor(_lightAnchorColor);
     _lightHue = oklchL.h;
@@ -99,6 +103,10 @@ class _OklchPaletteDemoAppState extends State<OklchPaletteDemoApp> {
       lightAnchor: _lightAnchorColor,
       darkAnchor: _darkAnchorColor,
       primaryColor: _primaryColor,
+      errorColor: _errorColor,
+      warningColor: _warningColor,
+      infoColor: _infoColor,
+      successColor: _successColor,
       shape: _shape,
       density: _density,
     );

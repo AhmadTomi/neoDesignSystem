@@ -20,6 +20,18 @@ class ThemePreset {
   /// Brand accent color (Flutter Color).
   final Color primaryColor;
 
+  /// Optional semantic error color override.
+  final Color? errorColor;
+
+  /// Optional semantic warning color override.
+  final Color? warningColor;
+
+  /// Optional semantic info color override.
+  final Color? infoColor;
+
+  /// Optional semantic success color override.
+  final Color? successColor;
+
   /// Corner radius scale preset.
   final ShapePreset shape;
 
@@ -58,6 +70,10 @@ class ThemePreset {
     required this.lightAnchor,
     required this.darkAnchor,
     required this.primaryColor,
+    this.errorColor,
+    this.warningColor,
+    this.infoColor,
+    this.successColor,
     this.shape = ShapePreset.rounded,
     this.baseRadius,
     this.density = DensityPreset.comfortable,
@@ -79,6 +95,10 @@ class ThemePreset {
       anchorColor: anchor,
       isDark: isDark,
       primaryColor: primaryColor,
+      errorColor: errorColor,
+      warningColor: warningColor,
+      infoColor: infoColor,
+      successColor: successColor,
     );
 
     // 2. Generate AppRadiusTheme
@@ -209,6 +229,10 @@ class ThemePreset {
     Color? lightAnchor,
     Color? darkAnchor,
     Color? primaryColor,
+    Color? errorColor,
+    Color? warningColor,
+    Color? infoColor,
+    Color? successColor,
     ShapePreset? shape,
     double? baseRadius,
     DensityPreset? density,
@@ -228,6 +252,10 @@ class ThemePreset {
       lightAnchor: lightAnchor ?? this.lightAnchor,
       darkAnchor: darkAnchor ?? this.darkAnchor,
       primaryColor: primaryColor ?? this.primaryColor,
+      errorColor: errorColor ?? this.errorColor,
+      warningColor: warningColor ?? this.warningColor,
+      infoColor: infoColor ?? this.infoColor,
+      successColor: successColor ?? this.successColor,
       shape: shape ?? this.shape,
       baseRadius: baseRadius ?? this.baseRadius,
       density: density ?? this.density,
