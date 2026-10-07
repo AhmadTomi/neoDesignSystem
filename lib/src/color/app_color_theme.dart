@@ -121,10 +121,20 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
     required Color anchorColor,
     required bool isDark,
     Color? primaryColor,
+    Color? darkPrimaryColor,
+    Color? lightPrimaryColor,
     Color? successColor,
+    Color? darkSuccessColor,
+    Color? lightSuccessColor,
     Color? warningColor,
+    Color? darkWarningColor,
+    Color? lightWarningColor,
     Color? errorColor,
+    Color? darkErrorColor,
+    Color? lightErrorColor,
     Color? infoColor,
+    Color? darkInfoColor,
+    Color? lightInfoColor,
     double? c2Delta,
     double? troughDelta,
   }) {
@@ -135,10 +145,20 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
       h: oklch.h,
       isDark: isDark,
       primaryColor: primaryColor,
+      darkPrimaryColor: darkPrimaryColor,
+      lightPrimaryColor: lightPrimaryColor,
       successColor: successColor,
+      darkSuccessColor: darkSuccessColor,
+      lightSuccessColor: lightSuccessColor,
       warningColor: warningColor,
+      darkWarningColor: darkWarningColor,
+      lightWarningColor: lightWarningColor,
       errorColor: errorColor,
+      darkErrorColor: darkErrorColor,
+      lightErrorColor: lightErrorColor,
       infoColor: infoColor,
+      darkInfoColor: darkInfoColor,
+      lightInfoColor: lightInfoColor,
       c2Delta: c2Delta,
       troughDelta: troughDelta,
     );
@@ -151,10 +171,20 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
     required double h,
     required bool isDark,
     Color? primaryColor,
+    Color? darkPrimaryColor,
+    Color? lightPrimaryColor,
     Color? successColor,
+    Color? darkSuccessColor,
+    Color? lightSuccessColor,
     Color? warningColor,
+    Color? darkWarningColor,
+    Color? lightWarningColor,
     Color? errorColor,
+    Color? darkErrorColor,
+    Color? lightErrorColor,
     Color? infoColor,
+    Color? darkInfoColor,
+    Color? lightInfoColor,
     double? c2Delta,
     double? troughDelta,
   }) {
@@ -178,11 +208,11 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
 
     if (!isDark) {
       // ----------------- Light Mode Formulas -----------------
-      final l1 = (anchorL + effectiveC2Delta * 2.0).clamp(0.0, 0.99);
+      final l1 = (anchorL - effectiveC2Delta * 2.0).clamp(0.0, 1.0);
       final c1 = c * 0.70;
       final oklch1 = OklchColor(l1, c1, h);
 
-      final l2 = (anchorL + effectiveC2Delta).clamp(0.0, 1.0);
+      final l2 = (anchorL - effectiveC2Delta).clamp(0.0, 1.0);
       final c2 = c * 0.90;
       final oklch2 = OklchColor(l2, c2, h);
 
@@ -215,30 +245,125 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
       const cTfBorder = 0.02;
       final oklchTfBorder = OklchColor(lTfBorder, cTfBorder, h);
 
-      final lPri = oklchP.l.clamp(0.35, 0.65);
-      final oklchPri = OklchColor(lPri, oklchP.c, oklchP.h);
-      final colPrimary = oklchPri.toColor();
-      final colOnPrimary = lPri > 0.62 ? const Color(0xFF0F172A) : Colors.white;
+      final Color colPrimary;
+      final Color colOnPrimary;
+      final double lPri;
+      final double cPri;
+      final String formulaPri;
+      final String hexPri;
+      if (lightPrimaryColor != null) {
+        colPrimary = lightPrimaryColor;
+        final oklchExact = OklchColor.fromColor(lightPrimaryColor);
+        lPri = oklchExact.l;
+        cPri = oklchExact.c;
+        hexPri = oklchExact.hexCode;
+        formulaPri = 'Exact light override ($hexPri)';
+        colOnPrimary = lPri > 0.62 ? const Color(0xFF0F172A) : Colors.white;
+      } else {
+        lPri = oklchP.l.clamp(0.35, 0.65);
+        cPri = oklchP.c;
+        final oklchPri = OklchColor(lPri, cPri, oklchP.h);
+        colPrimary = oklchPri.toColor();
+        hexPri = oklchPri.hexCode;
+        formulaPri = 'L: ${lPri.toStringAsFixed(3)}, C: ${cPri.toStringAsFixed(3)}';
+        colOnPrimary = lPri > 0.62 ? const Color(0xFF0F172A) : Colors.white;
+      }
 
-      final lSuc = oklchSuc.l.clamp(0.35, 0.65);
-      final oklchSucDerived = OklchColor(lSuc, oklchSuc.c, oklchSuc.h);
-      final colSuccess = oklchSucDerived.toColor();
-      final colOnSuccess = lSuc > 0.62 ? const Color(0xFF0F172A) : Colors.white;
+      final Color colSuccess;
+      final Color colOnSuccess;
+      final double lSuc;
+      final double cSuc;
+      final String formulaSuc;
+      final String hexSuc;
+      if (lightSuccessColor != null) {
+        colSuccess = lightSuccessColor;
+        final oklchExact = OklchColor.fromColor(lightSuccessColor);
+        lSuc = oklchExact.l;
+        cSuc = oklchExact.c;
+        hexSuc = oklchExact.hexCode;
+        formulaSuc = 'Exact light override ($hexSuc)';
+        colOnSuccess = lSuc > 0.62 ? const Color(0xFF0F172A) : Colors.white;
+      } else {
+        lSuc = oklchSuc.l.clamp(0.35, 0.65);
+        cSuc = oklchSuc.c;
+        final oklchSucDerived = OklchColor(lSuc, cSuc, oklchSuc.h);
+        colSuccess = oklchSucDerived.toColor();
+        hexSuc = oklchSucDerived.hexCode;
+        formulaSuc = 'L: ${lSuc.toStringAsFixed(3)}, C: ${cSuc.toStringAsFixed(3)}';
+        colOnSuccess = lSuc > 0.62 ? const Color(0xFF0F172A) : Colors.white;
+      }
 
-      final lWar = oklchWar.l.clamp(0.40, 0.72);
-      final oklchWarDerived = OklchColor(lWar, oklchWar.c, oklchWar.h);
-      final colWarning = oklchWarDerived.toColor();
-      final colOnWarning = lWar > 0.62 ? const Color(0xFF0F172A) : Colors.white;
+      final Color colWarning;
+      final Color colOnWarning;
+      final double lWar;
+      final double cWar;
+      final String formulaWar;
+      final String hexWar;
+      if (lightWarningColor != null) {
+        colWarning = lightWarningColor;
+        final oklchExact = OklchColor.fromColor(lightWarningColor);
+        lWar = oklchExact.l;
+        cWar = oklchExact.c;
+        hexWar = oklchExact.hexCode;
+        formulaWar = 'Exact light override ($hexWar)';
+        colOnWarning = lWar > 0.62 ? const Color(0xFF0F172A) : Colors.white;
+      } else {
+        lWar = oklchWar.l.clamp(0.40, 0.72);
+        cWar = oklchWar.c;
+        final oklchWarDerived = OklchColor(lWar, cWar, oklchWar.h);
+        colWarning = oklchWarDerived.toColor();
+        hexWar = oklchWarDerived.hexCode;
+        formulaWar = 'L: ${lWar.toStringAsFixed(3)}, C: ${cWar.toStringAsFixed(3)}';
+        colOnWarning = lWar > 0.62 ? const Color(0xFF0F172A) : Colors.white;
+      }
 
-      final lErr = oklchErr.l.clamp(0.35, 0.65);
-      final oklchErrDerived = OklchColor(lErr, oklchErr.c, oklchErr.h);
-      final colError = oklchErrDerived.toColor();
-      final colOnError = lErr > 0.62 ? const Color(0xFF0F172A) : Colors.white;
+      final Color colError;
+      final Color colOnError;
+      final double lErr;
+      final double cErr;
+      final String formulaErr;
+      final String hexErr;
+      if (lightErrorColor != null) {
+        colError = lightErrorColor;
+        final oklchExact = OklchColor.fromColor(lightErrorColor);
+        lErr = oklchExact.l;
+        cErr = oklchExact.c;
+        hexErr = oklchExact.hexCode;
+        formulaErr = 'Exact light override ($hexErr)';
+        colOnError = lErr > 0.62 ? const Color(0xFF0F172A) : Colors.white;
+      } else {
+        lErr = oklchErr.l.clamp(0.35, 0.65);
+        cErr = oklchErr.c;
+        final oklchErrDerived = OklchColor(lErr, cErr, oklchErr.h);
+        colError = oklchErrDerived.toColor();
+        hexErr = oklchErrDerived.hexCode;
+        formulaErr = 'L: ${lErr.toStringAsFixed(3)}, C: ${cErr.toStringAsFixed(3)}';
+        colOnError = lErr > 0.62 ? const Color(0xFF0F172A) : Colors.white;
+      }
 
-      final lInf = oklchInf.l.clamp(0.35, 0.65);
-      final oklchInfDerived = OklchColor(lInf, oklchInf.c, oklchInf.h);
-      final colInfo = oklchInfDerived.toColor();
-      final colOnInfo = lInf > 0.62 ? const Color(0xFF0F172A) : Colors.white;
+      final Color colInfo;
+      final Color colOnInfo;
+      final double lInf;
+      final double cInf;
+      final String formulaInf;
+      final String hexInf;
+      if (lightInfoColor != null) {
+        colInfo = lightInfoColor;
+        final oklchExact = OklchColor.fromColor(lightInfoColor);
+        lInf = oklchExact.l;
+        cInf = oklchExact.c;
+        hexInf = oklchExact.hexCode;
+        formulaInf = 'Exact light override ($hexInf)';
+        colOnInfo = lInf > 0.62 ? const Color(0xFF0F172A) : Colors.white;
+      } else {
+        lInf = oklchInf.l.clamp(0.35, 0.65);
+        cInf = oklchInf.c;
+        final oklchInfDerived = OklchColor(lInf, cInf, oklchInf.h);
+        colInfo = oklchInfDerived.toColor();
+        hexInf = oklchInfDerived.hexCode;
+        formulaInf = 'L: ${lInf.toStringAsFixed(3)}, C: ${cInf.toStringAsFixed(3)}';
+        colOnInfo = lInf > 0.62 ? const Color(0xFF0F172A) : Colors.white;
+      }
 
       final col1 = oklch1.toColor();
       final col2 = oklch2.toColor();
@@ -263,7 +388,7 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
           c: c1,
           color: col1,
           hex: oklch1.hexCode,
-          formula: 'anchorL + ${(effectiveC2Delta * 2.0).toStringAsFixed(3)} (c * 0.70)',
+          formula: 'anchorL - ${(effectiveC2Delta * 2.0).toStringAsFixed(3)} (c * 0.70)',
         ),
         LayerSpec(
           id: 'C2',
@@ -273,7 +398,7 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
           c: c2,
           color: col2,
           hex: oklch2.hexCode,
-          formula: 'anchorL + ${effectiveC2Delta.toStringAsFixed(3)} (c * 0.90)',
+          formula: 'anchorL - ${effectiveC2Delta.toStringAsFixed(3)} (c * 0.90)',
         ),
         LayerSpec(
           id: 'C3',
@@ -360,50 +485,50 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
           label: 'Primary Accent',
           role: 'Focus Border & Button',
           l: lPri,
-          c: oklchP.c,
+          c: cPri,
           color: colPrimary,
-          hex: oklchPri.hexCode,
-          formula: 'L: ${lPri.toStringAsFixed(3)}, C: ${oklchP.c.toStringAsFixed(3)}',
+          hex: hexPri,
+          formula: formulaPri,
         ),
         LayerSpec(
           id: 'SUC',
           label: 'Success Status',
           role: 'Confirmations & Completed',
           l: lSuc,
-          c: oklchSuc.c,
+          c: cSuc,
           color: colSuccess,
-          hex: oklchSucDerived.hexCode,
-          formula: 'L: ${lSuc.toStringAsFixed(3)}, C: ${oklchSuc.c.toStringAsFixed(3)}',
+          hex: hexSuc,
+          formula: formulaSuc,
         ),
         LayerSpec(
           id: 'WAR',
           label: 'Warning Status',
           role: 'Cautions & Alerts',
           l: lWar,
-          c: oklchWar.c,
+          c: cWar,
           color: colWarning,
-          hex: oklchWarDerived.hexCode,
-          formula: 'L: ${lWar.toStringAsFixed(3)}, C: ${oklchWar.c.toStringAsFixed(3)}',
+          hex: hexWar,
+          formula: formulaWar,
         ),
         LayerSpec(
           id: 'ERR',
           label: 'Error Status',
           role: 'Invalid Inputs & Hazards',
           l: lErr,
-          c: oklchErr.c,
+          c: cErr,
           color: colError,
-          hex: oklchErrDerived.hexCode,
-          formula: 'L: ${lErr.toStringAsFixed(3)}, C: ${oklchErr.c.toStringAsFixed(3)}',
+          hex: hexErr,
+          formula: formulaErr,
         ),
         LayerSpec(
           id: 'INF',
           label: 'Info Status',
           role: 'Guidance & Notifications',
           l: lInf,
-          c: oklchInf.c,
+          c: cInf,
           color: colInfo,
-          hex: oklchInfDerived.hexCode,
-          formula: 'L: ${lInf.toStringAsFixed(3)}, C: ${oklchInf.c.toStringAsFixed(3)}',
+          hex: hexInf,
+          formula: formulaInf,
         ),
         LayerSpec(
           id: 'TDB',
@@ -496,30 +621,125 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
       const cTfBorder = 0.02;
       final oklchTfBorder = OklchColor(lTfBorder, cTfBorder, h);
 
-      final lPri = (oklchP.l < 0.55 ? (oklchP.l + 0.22) : oklchP.l).clamp(0.55, 0.78);
-      final oklchPri = OklchColor(lPri, oklchP.c, oklchP.h);
-      final colPrimary = oklchPri.toColor();
-      final colOnPrimary = lPri > 0.62 ? const Color(0xFF090D16) : Colors.white;
+      final Color colPrimary;
+      final Color colOnPrimary;
+      final double lPri;
+      final double cPri;
+      final String formulaPri;
+      final String hexPri;
+      if (darkPrimaryColor != null) {
+        colPrimary = darkPrimaryColor;
+        final oklchExact = OklchColor.fromColor(darkPrimaryColor);
+        lPri = oklchExact.l;
+        cPri = oklchExact.c;
+        hexPri = oklchExact.hexCode;
+        formulaPri = 'Exact dark override ($hexPri)';
+        colOnPrimary = lPri > 0.62 ? const Color(0xFF090D16) : Colors.white;
+      } else {
+        lPri = (oklchP.l < 0.55 ? (oklchP.l + 0.22) : oklchP.l).clamp(0.55, 0.78);
+        cPri = oklchP.c;
+        final oklchPri = OklchColor(lPri, cPri, oklchP.h);
+        colPrimary = oklchPri.toColor();
+        hexPri = oklchPri.hexCode;
+        formulaPri = 'L: ${lPri.toStringAsFixed(3)}, C: ${cPri.toStringAsFixed(3)}';
+        colOnPrimary = lPri > 0.62 ? const Color(0xFF090D16) : Colors.white;
+      }
 
-      final lSuc = (oklchSuc.l < 0.55 ? (oklchSuc.l + 0.22) : oklchSuc.l).clamp(0.55, 0.78);
-      final oklchSucDerived = OklchColor(lSuc, oklchSuc.c, oklchSuc.h);
-      final colSuccess = oklchSucDerived.toColor();
-      final colOnSuccess = lSuc > 0.62 ? const Color(0xFF090D16) : Colors.white;
+      final Color colSuccess;
+      final Color colOnSuccess;
+      final double lSuc;
+      final double cSuc;
+      final String formulaSuc;
+      final String hexSuc;
+      if (darkSuccessColor != null) {
+        colSuccess = darkSuccessColor;
+        final oklchExact = OklchColor.fromColor(darkSuccessColor);
+        lSuc = oklchExact.l;
+        cSuc = oklchExact.c;
+        hexSuc = oklchExact.hexCode;
+        formulaSuc = 'Exact dark override ($hexSuc)';
+        colOnSuccess = lSuc > 0.62 ? const Color(0xFF090D16) : Colors.white;
+      } else {
+        lSuc = (oklchSuc.l < 0.55 ? (oklchSuc.l + 0.22) : oklchSuc.l).clamp(0.55, 0.78);
+        cSuc = oklchSuc.c;
+        final oklchSucDerived = OklchColor(lSuc, cSuc, oklchSuc.h);
+        colSuccess = oklchSucDerived.toColor();
+        hexSuc = oklchSucDerived.hexCode;
+        formulaSuc = 'L: ${lSuc.toStringAsFixed(3)}, C: ${cSuc.toStringAsFixed(3)}';
+        colOnSuccess = lSuc > 0.62 ? const Color(0xFF090D16) : Colors.white;
+      }
 
-      final lWar = (oklchWar.l < 0.60 ? (oklchWar.l + 0.18) : oklchWar.l).clamp(0.60, 0.82);
-      final oklchWarDerived = OklchColor(lWar, oklchWar.c, oklchWar.h);
-      final colWarning = oklchWarDerived.toColor();
-      final colOnWarning = lWar > 0.62 ? const Color(0xFF090D16) : Colors.white;
+      final Color colWarning;
+      final Color colOnWarning;
+      final double lWar;
+      final double cWar;
+      final String formulaWar;
+      final String hexWar;
+      if (darkWarningColor != null) {
+        colWarning = darkWarningColor;
+        final oklchExact = OklchColor.fromColor(darkWarningColor);
+        lWar = oklchExact.l;
+        cWar = oklchExact.c;
+        hexWar = oklchExact.hexCode;
+        formulaWar = 'Exact dark override ($hexWar)';
+        colOnWarning = lWar > 0.62 ? const Color(0xFF090D16) : Colors.white;
+      } else {
+        lWar = (oklchWar.l < 0.60 ? (oklchWar.l + 0.18) : oklchWar.l).clamp(0.60, 0.82);
+        cWar = oklchWar.c;
+        final oklchWarDerived = OklchColor(lWar, cWar, oklchWar.h);
+        colWarning = oklchWarDerived.toColor();
+        hexWar = oklchWarDerived.hexCode;
+        formulaWar = 'L: ${lWar.toStringAsFixed(3)}, C: ${cWar.toStringAsFixed(3)}';
+        colOnWarning = lWar > 0.62 ? const Color(0xFF090D16) : Colors.white;
+      }
 
-      final lErr = (oklchErr.l < 0.55 ? (oklchErr.l + 0.22) : oklchErr.l).clamp(0.55, 0.78);
-      final oklchErrDerived = OklchColor(lErr, oklchErr.c, oklchErr.h);
-      final colError = oklchErrDerived.toColor();
-      final colOnError = lErr > 0.62 ? const Color(0xFF090D16) : Colors.white;
+      final Color colError;
+      final Color colOnError;
+      final double lErr;
+      final double cErr;
+      final String formulaErr;
+      final String hexErr;
+      if (darkErrorColor != null) {
+        colError = darkErrorColor;
+        final oklchExact = OklchColor.fromColor(darkErrorColor);
+        lErr = oklchExact.l;
+        cErr = oklchExact.c;
+        hexErr = oklchExact.hexCode;
+        formulaErr = 'Exact dark override ($hexErr)';
+        colOnError = lErr > 0.62 ? const Color(0xFF090D16) : Colors.white;
+      } else {
+        lErr = (oklchErr.l < 0.55 ? (oklchErr.l + 0.22) : oklchErr.l).clamp(0.55, 0.78);
+        cErr = oklchErr.c;
+        final oklchErrDerived = OklchColor(lErr, cErr, oklchErr.h);
+        colError = oklchErrDerived.toColor();
+        hexErr = oklchErrDerived.hexCode;
+        formulaErr = 'L: ${lErr.toStringAsFixed(3)}, C: ${cErr.toStringAsFixed(3)}';
+        colOnError = lErr > 0.62 ? const Color(0xFF090D16) : Colors.white;
+      }
 
-      final lInf = (oklchInf.l < 0.55 ? (oklchInf.l + 0.22) : oklchInf.l).clamp(0.55, 0.78);
-      final oklchInfDerived = OklchColor(lInf, oklchInf.c, oklchInf.h);
-      final colInfo = oklchInfDerived.toColor();
-      final colOnInfo = lInf > 0.62 ? const Color(0xFF090D16) : Colors.white;
+      final Color colInfo;
+      final Color colOnInfo;
+      final double lInf;
+      final double cInf;
+      final String formulaInf;
+      final String hexInf;
+      if (darkInfoColor != null) {
+        colInfo = darkInfoColor;
+        final oklchExact = OklchColor.fromColor(darkInfoColor);
+        lInf = oklchExact.l;
+        cInf = oklchExact.c;
+        hexInf = oklchExact.hexCode;
+        formulaInf = 'Exact dark override ($hexInf)';
+        colOnInfo = lInf > 0.62 ? const Color(0xFF090D16) : Colors.white;
+      } else {
+        lInf = (oklchInf.l < 0.55 ? (oklchInf.l + 0.22) : oklchInf.l).clamp(0.55, 0.78);
+        cInf = oklchInf.c;
+        final oklchInfDerived = OklchColor(lInf, cInf, oklchInf.h);
+        colInfo = oklchInfDerived.toColor();
+        hexInf = oklchInfDerived.hexCode;
+        formulaInf = 'L: ${lInf.toStringAsFixed(3)}, C: ${cInf.toStringAsFixed(3)}';
+        colOnInfo = lInf > 0.62 ? const Color(0xFF090D16) : Colors.white;
+      }
 
       final col1 = oklch1.toColor();
       final col2 = oklch2.toColor();
@@ -641,50 +861,50 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
           label: 'Primary Accent',
           role: 'Focus Border & Button',
           l: lPri,
-          c: oklchP.c,
+          c: cPri,
           color: colPrimary,
-          hex: oklchPri.hexCode,
-          formula: 'L: ${lPri.toStringAsFixed(3)}, C: ${oklchP.c.toStringAsFixed(3)}',
+          hex: hexPri,
+          formula: formulaPri,
         ),
         LayerSpec(
           id: 'SUC',
           label: 'Success Status',
           role: 'Confirmations & Completed',
           l: lSuc,
-          c: oklchSuc.c,
+          c: cSuc,
           color: colSuccess,
-          hex: oklchSucDerived.hexCode,
-          formula: 'L: ${lSuc.toStringAsFixed(3)}, C: ${oklchSuc.c.toStringAsFixed(3)}',
+          hex: hexSuc,
+          formula: formulaSuc,
         ),
         LayerSpec(
           id: 'WAR',
           label: 'Warning Status',
           role: 'Cautions & Alerts',
           l: lWar,
-          c: oklchWar.c,
+          c: cWar,
           color: colWarning,
-          hex: oklchWarDerived.hexCode,
-          formula: 'L: ${lWar.toStringAsFixed(3)}, C: ${oklchWar.c.toStringAsFixed(3)}',
+          hex: hexWar,
+          formula: formulaWar,
         ),
         LayerSpec(
           id: 'ERR',
           label: 'Error Status',
           role: 'Invalid Inputs & Hazards',
           l: lErr,
-          c: oklchErr.c,
+          c: cErr,
           color: colError,
-          hex: oklchErrDerived.hexCode,
-          formula: 'L: ${lErr.toStringAsFixed(3)}, C: ${oklchErr.c.toStringAsFixed(3)}',
+          hex: hexErr,
+          formula: formulaErr,
         ),
         LayerSpec(
           id: 'INF',
           label: 'Info Status',
           role: 'Guidance & Notifications',
           l: lInf,
-          c: oklchInf.c,
+          c: cInf,
           color: colInfo,
-          hex: oklchInfDerived.hexCode,
-          formula: 'L: ${lInf.toStringAsFixed(3)}, C: ${oklchInf.c.toStringAsFixed(3)}',
+          hex: hexInf,
+          formula: formulaInf,
         ),
         LayerSpec(
           id: 'TDB',

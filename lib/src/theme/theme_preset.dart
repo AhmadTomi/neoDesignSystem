@@ -20,17 +20,47 @@ class ThemePreset {
   /// Brand accent color (Flutter Color).
   final Color primaryColor;
 
+  /// Optional exact dark mode override for primary brand color.
+  final Color? darkPrimaryColor;
+
+  /// Optional exact light mode override for primary brand color.
+  final Color? lightPrimaryColor;
+
   /// Optional semantic error color override.
   final Color? errorColor;
+
+  /// Optional exact dark mode override for error color.
+  final Color? darkErrorColor;
+
+  /// Optional exact light mode override for error color.
+  final Color? lightErrorColor;
 
   /// Optional semantic warning color override.
   final Color? warningColor;
 
+  /// Optional exact dark mode override for warning color.
+  final Color? darkWarningColor;
+
+  /// Optional exact light mode override for warning color.
+  final Color? lightWarningColor;
+
   /// Optional semantic info color override.
   final Color? infoColor;
 
+  /// Optional exact dark mode override for info color.
+  final Color? darkInfoColor;
+
+  /// Optional exact light mode override for info color.
+  final Color? lightInfoColor;
+
   /// Optional semantic success color override.
   final Color? successColor;
+
+  /// Optional exact dark mode override for success color.
+  final Color? darkSuccessColor;
+
+  /// Optional exact light mode override for success color.
+  final Color? lightSuccessColor;
 
   /// Corner radius scale preset.
   final ShapePreset shape;
@@ -70,10 +100,20 @@ class ThemePreset {
     required this.lightAnchor,
     required this.darkAnchor,
     required this.primaryColor,
+    this.darkPrimaryColor,
+    this.lightPrimaryColor,
     this.errorColor,
+    this.darkErrorColor,
+    this.lightErrorColor,
     this.warningColor,
+    this.darkWarningColor,
+    this.lightWarningColor,
     this.infoColor,
+    this.darkInfoColor,
+    this.lightInfoColor,
     this.successColor,
+    this.darkSuccessColor,
+    this.lightSuccessColor,
     this.shape = ShapePreset.rounded,
     this.baseRadius,
     this.density = DensityPreset.comfortable,
@@ -95,10 +135,20 @@ class ThemePreset {
       anchorColor: anchor,
       isDark: isDark,
       primaryColor: primaryColor,
+      darkPrimaryColor: darkPrimaryColor,
+      lightPrimaryColor: lightPrimaryColor,
       errorColor: errorColor,
+      darkErrorColor: darkErrorColor,
+      lightErrorColor: lightErrorColor,
       warningColor: warningColor,
+      darkWarningColor: darkWarningColor,
+      lightWarningColor: lightWarningColor,
       infoColor: infoColor,
+      darkInfoColor: darkInfoColor,
+      lightInfoColor: lightInfoColor,
       successColor: successColor,
+      darkSuccessColor: darkSuccessColor,
+      lightSuccessColor: lightSuccessColor,
     );
 
     // 2. Generate AppRadiusTheme
@@ -229,10 +279,30 @@ class ThemePreset {
     Color? lightAnchor,
     Color? darkAnchor,
     Color? primaryColor,
+    Color? darkPrimaryColor,
+    Color? lightPrimaryColor,
     Color? errorColor,
+    Color? darkErrorColor,
+    Color? lightErrorColor,
     Color? warningColor,
+    Color? darkWarningColor,
+    Color? lightWarningColor,
     Color? infoColor,
+    Color? darkInfoColor,
+    Color? lightInfoColor,
     Color? successColor,
+    Color? darkSuccessColor,
+    Color? lightSuccessColor,
+    bool clearDarkPrimaryColor = false,
+    bool clearLightPrimaryColor = false,
+    bool clearDarkErrorColor = false,
+    bool clearLightErrorColor = false,
+    bool clearDarkWarningColor = false,
+    bool clearLightWarningColor = false,
+    bool clearDarkInfoColor = false,
+    bool clearLightInfoColor = false,
+    bool clearDarkSuccessColor = false,
+    bool clearLightSuccessColor = false,
     ShapePreset? shape,
     double? baseRadius,
     DensityPreset? density,
@@ -252,10 +322,20 @@ class ThemePreset {
       lightAnchor: lightAnchor ?? this.lightAnchor,
       darkAnchor: darkAnchor ?? this.darkAnchor,
       primaryColor: primaryColor ?? this.primaryColor,
+      darkPrimaryColor: clearDarkPrimaryColor ? null : (darkPrimaryColor ?? this.darkPrimaryColor),
+      lightPrimaryColor: clearLightPrimaryColor ? null : (lightPrimaryColor ?? this.lightPrimaryColor),
       errorColor: errorColor ?? this.errorColor,
+      darkErrorColor: clearDarkErrorColor ? null : (darkErrorColor ?? this.darkErrorColor),
+      lightErrorColor: clearLightErrorColor ? null : (lightErrorColor ?? this.lightErrorColor),
       warningColor: warningColor ?? this.warningColor,
+      darkWarningColor: clearDarkWarningColor ? null : (darkWarningColor ?? this.darkWarningColor),
+      lightWarningColor: clearLightWarningColor ? null : (lightWarningColor ?? this.lightWarningColor),
       infoColor: infoColor ?? this.infoColor,
+      darkInfoColor: clearDarkInfoColor ? null : (darkInfoColor ?? this.darkInfoColor),
+      lightInfoColor: clearLightInfoColor ? null : (lightInfoColor ?? this.lightInfoColor),
       successColor: successColor ?? this.successColor,
+      darkSuccessColor: clearDarkSuccessColor ? null : (darkSuccessColor ?? this.darkSuccessColor),
+      lightSuccessColor: clearLightSuccessColor ? null : (lightSuccessColor ?? this.lightSuccessColor),
       shape: shape ?? this.shape,
       baseRadius: baseRadius ?? this.baseRadius,
       density: density ?? this.density,
@@ -324,11 +404,36 @@ abstract final class BuiltInPresets {
     isBuiltIn: true,
   );
 
+  /// Neo Trading: Specialized trading interface with high contrast and compact metrics.
+  static const trading = ThemePreset(
+    id: 'neo_trading',
+    name: 'Neo Trading',
+    description: 'Specialized trading interface with high contrast and compact metrics.',
+    lightAnchor: Color(0xFFF4F5F7),
+    darkAnchor: Color(0xFF101010),
+    primaryColor: Color(0xFF1D65AB),
+    errorColor: Color(0xFFDC2626),
+    warningColor: Color(0xFFD97706),
+    infoColor: Color(0xFF417BD2),
+    shape: ShapePreset.rounded,
+    density: DensityPreset.compact,
+    fontFamily: 'Inter',
+    baseFontSize: 13,
+    baseRadius: 4,
+    baseSpacing: 8,
+    isBuiltIn: true,
+  );
+
+  /// Alias for [trading].
+  static const neoTrading = trading;
+
   /// All built-in presets list.
   static const List<ThemePreset> all = [
     slate,
     emerald,
     nordic,
     amber,
+    trading,
   ];
 }
+

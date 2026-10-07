@@ -9,6 +9,9 @@ void main() {
 
 /// Main Application Entry Point
 class OklchPaletteDemoApp extends StatefulWidget {
+  /// Specialized Neo Trading Preset configured for the showcase.
+  static const ThemePreset neoTradingPreset = BuiltInPresets.trading;
+
   const OklchPaletteDemoApp({super.key});
 
   @override
@@ -810,12 +813,16 @@ class _OklchPaletteDemoAppState extends State<OklchPaletteDemoApp> {
                   builder: (context, constraints) {
                     final isWide = constraints.maxWidth >= 840;
 
-                    final radiusTheme = _shape == ShapePreset.sharp
-                        ? AppRadiusTheme.sharp()
-                        : AppRadiusTheme.rounded();
-                    final spacingTheme = _density == DensityPreset.compact
-                        ? AppSpacingTheme.compact()
-                        : AppSpacingTheme.comfortable();
+                    final radiusTheme = AppRadiusTheme.create(
+                      baseRadius: _themeController.currentPreset.baseRadius ??
+                          (_shape == ShapePreset.sharp ? 0.0 : 12.0),
+                      shape: _shape,
+                    );
+                    final spacingTheme = AppSpacingTheme.create(
+                      baseSpacing: _themeController.currentPreset.baseSpacing ??
+                          (_density == DensityPreset.compact ? 10.0 : 16.0),
+                      density: _density,
+                    );
 
                     final lightThemeWidget = Theme(
                       data: lightPalette.toThemeData().copyWith(

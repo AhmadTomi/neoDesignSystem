@@ -109,4 +109,29 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Import Theme Preset JSON'), findsNothing);
   });
+
+  testWidgets('Can select Neo Trading preset from dropdown and apply its tokens', (tester) async {
+    tester.view.physicalSize = const Size(1200, 1600);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() => tester.view.resetPhysicalSize());
+
+    await tester.pumpWidget(const OklchPaletteDemoApp());
+    await tester.pumpAndSettle();
+
+    expect(find.text('Default Slate'), findsWidgets);
+
+    // Open preset dropdown
+    await tester.tap(find.text('Default Slate').first);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Neo Trading'), findsWidgets);
+
+    // Tap Neo Trading option
+    await tester.tap(find.text('Neo Trading').last);
+    await tester.pumpAndSettle();
+
+    // Verify Neo Trading is now selected
+    expect(find.text('Neo Trading'), findsWidgets);
+  });
 }
+

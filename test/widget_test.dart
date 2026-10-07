@@ -73,12 +73,12 @@ void main() {
       final specTbf = palette.specs.firstWhere((s) => s.id == 'TBF');
       final specTbt = palette.specs.firstWhere((s) => s.id == 'TBT');
 
-      // C1: anchorL + (0.018 * 2.0) = 0.956, chroma: c * 0.70
-      expect(specC1.l, closeTo(0.92 + 0.036, 0.001));
+      // C1: anchorL - (0.018 * 2.0) = 0.884, chroma: c * 0.70 (Darker than C3 anchor)
+      expect(specC1.l, closeTo(0.92 - 0.036, 0.001));
       expect(specC1.c, closeTo(0.05 * 0.70, 0.001));
 
-      // C2: anchorL + 0.018 = 0.938 (lebih dekat & harmonis dengan C3), chroma: c * 0.90
-      expect(specC2.l, closeTo(0.92 + 0.018, 0.001));
+      // C2: anchorL - 0.018 = 0.902, chroma: c * 0.90
+      expect(specC2.l, closeTo(0.92 - 0.018, 0.001));
       expect(specC2.c, closeTo(0.05 * 0.90, 0.001));
 
       // C3 (Anchor): anchorL, chroma: c
@@ -373,13 +373,70 @@ void main() {
 
   group('ThemePreset and AppThemeController Tests', () {
     test('Built-in presets exist and generate valid ThemeData', () {
-      expect(BuiltInPresets.all.length, greaterThanOrEqualTo(4));
+      expect(BuiltInPresets.all.length, greaterThanOrEqualTo(5));
       final slate = BuiltInPresets.slate;
       final theme = slate.toThemeData(isDark: false);
       expect(theme.scaffoldBackgroundColor, isNotNull);
       expect(theme.extension<AppColorTheme>(), isNotNull);
       expect(theme.extension<AppRadiusTheme>(), isNotNull);
       expect(theme.extension<AppSpacingTheme>(), isNotNull);
+    });
+
+    test('Neo Trading built-in preset has expected properties and produces valid ThemeData', () {
+      final trading = BuiltInPresets.trading;
+      expect(trading.id, 'neo_trading');
+      expect(trading.name, 'Neo Trading');
+      expect(trading.description, 'Specialized trading interface with high contrast and compact metrics.');
+      expect(trading.lightAnchor, const Color(0xFFF4F5F7));
+      expect(trading.darkAnchor, const Color(0xFF101010));
+      expect(trading.primaryColor, const Color(0xFF1D65AB));
+      expect(trading.errorColor, const Color(0xFFDC2626));
+      expect(trading.warningColor, const Color(0xFFD97706));
+      expect(trading.infoColor, const Color(0xFF417BD2));
+      expect(trading.shape, ShapePreset.rounded);
+      expect(trading.density, DensityPreset.compact);
+      expect(trading.fontFamily, 'Inter');
+      expect(trading.baseFontSize, 13);
+      expect(trading.baseRadius, 4);
+      expect(trading.baseSpacing, 8);
+      expect(trading.isBuiltIn, isTrue);
+
+      expect(BuiltInPresets.neoTrading, equals(trading));
+      expect(BuiltInPresets.all, contains(trading));
+
+      final themeLight = trading.toThemeData(isDark: false);
+      expect(themeLight.brightness, Brightness.light);
+      expect(themeLight.extension<AppColorTheme>()?.primary, const Color(0xFF1D65AB));
+      expect(themeLight.extension<AppRadiusTheme>()?.md.value, 4.0);
+      expect(themeLight.extension<AppSpacingTheme>()?.gapMd, 8.0);
+      expect(themeLight.textTheme.bodyMedium?.fontSize, 12.0);
+
+      final themeDark = trading.toThemeData(isDark: true);
+      expect(themeDark.brightness, Brightness.dark);
+      expect(themeDark.extension<AppRadiusTheme>()?.md.value, 4.0);
+      expect(themeDark.extension<AppSpacingTheme>()?.gapMd, 8.0);
+    });
+
+    test('AppThemeController supports initialCustomPresets and addCustomPreset', () {
+      const custom = ThemePreset(
+        id: 'user_preset',
+        name: 'User Preset',
+        lightAnchor: Color(0xFFFFFFFF),
+        darkAnchor: Color(0xFF000000),
+        primaryColor: Color(0xFFFF0000),
+      );
+      final controller = AppThemeController(initialCustomPresets: [custom]);
+      expect(controller.allPresets, contains(custom));
+
+      const anotherCustom = ThemePreset(
+        id: 'user_preset_2',
+        name: 'User Preset 2',
+        lightAnchor: Color(0xFFFFFFFF),
+        darkAnchor: Color(0xFF000000),
+        primaryColor: Color(0xFF00FF00),
+      );
+      controller.addCustomPreset(anotherCustom);
+      expect(controller.allPresets, contains(anotherCustom));
     });
 
     test('ThemeModifier allows modifying ThemeData using all tokens', () {
@@ -614,6 +671,147 @@ void main() {
       // 4. Test setting zero radius switches to sharp
       controller.setBaseRounded(0.0);
       expect(controller.shape, ShapePreset.sharp);
+    });
+
+    test('Dark and light mode color overrides with exact preservation vs OKLCH fallback', () {
+      const brandColor = Color(0xFF1D65AB);
+
+      // Scenario 1: Only primaryColor provided -> Dark mode shifts via OKLCH to #64A9F4
+      final defaultPreset = ThemePreset(
+        id: 'test_default',
+        name: 'Test Default',
+        lightAnchor: const Color(0xFFF4F5F7),
+        darkAnchor: const Color(0xFF101010),
+        primaryColor: brandColor,
+      );
+
+      final defaultDarkTheme = defaultPreset.toThemeData(isDark: true);
+      final defaultDarkColor = defaultDarkTheme.extension<AppColorTheme>()!;
+      expect(defaultDarkColor.primary, isNot(equals(brandColor)));
+      expect(
+        '#${(defaultDarkColor.primary.r * 255).round().toRadixString(16).padLeft(2, '0')}${(defaultDarkColor.primary.g * 255).round().toRadixString(16).padLeft(2, '0')}${(defaultDarkColor.primary.b * 255).round().toRadixString(16).padLeft(2, '0')}'.toUpperCase(),
+        equals('#64A9F4'),
+      );
+
+      // Scenario 2: darkPrimaryColor explicitly provided -> Dark mode keeps EXACT brandColor (#1D65AB)
+      final exactPreset = ThemePreset(
+        id: 'test_exact',
+        name: 'Test Exact',
+        lightAnchor: const Color(0xFFF4F5F7),
+        darkAnchor: const Color(0xFF101010),
+        primaryColor: brandColor,
+        darkPrimaryColor: brandColor,
+      );
+
+      final exactLightTheme = exactPreset.toThemeData(isDark: false);
+      final exactLightColor = exactLightTheme.extension<AppColorTheme>()!;
+      expect(exactLightColor.primary, equals(brandColor));
+
+      final exactDarkTheme = exactPreset.toThemeData(isDark: true);
+      final exactDarkColor = exactDarkTheme.extension<AppColorTheme>()!;
+      expect(exactDarkColor.primary, equals(brandColor));
+      expect(exactDarkColor.onPrimary, equals(Colors.white)); // accessible contrast for dark blue
+    });
+
+    testWidgets('Trading app semantics: automatic mode switching via context.color', (tester) async {
+      const lightProfitBlue = Color(0xFF0284C7);
+      const darkProfitGreen = Color(0xFF00C087);
+      const lightLossRed = Color(0xFFDC2626);
+      const darkLossCoral = Color(0xFFF6465D);
+
+      final tradingPreset = ThemePreset(
+        id: 'trading_preset',
+        name: 'Trading Preset',
+        lightAnchor: const Color(0xFFF8FAFC),
+        darkAnchor: const Color(0xFF0F172A),
+        primaryColor: const Color(0xFF1D65AB),
+        darkPrimaryColor: const Color(0xFF1D65AB),
+        successColor: lightProfitBlue,
+        darkSuccessColor: darkProfitGreen,
+        errorColor: lightLossRed,
+        darkErrorColor: darkLossCoral,
+      );
+
+      late Color resolvedSuccessLight;
+      late Color resolvedErrorLight;
+      late Color resolvedSuccessDark;
+      late Color resolvedErrorDark;
+      late Color resolvedPrimaryDark;
+
+      // Pump Light mode
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: tradingPreset.toThemeData(isDark: false),
+          darkTheme: tradingPreset.toThemeData(isDark: true),
+          themeMode: ThemeMode.light,
+          home: Builder(
+            builder: (context) {
+              resolvedSuccessLight = context.color.success;
+              resolvedErrorLight = context.color.error;
+              return const SizedBox();
+            },
+          ),
+        ),
+      );
+
+      expect(resolvedSuccessLight, equals(lightProfitBlue));
+      expect(resolvedErrorLight, equals(lightLossRed));
+
+      // Pump Dark mode
+      final darkThemeData = tradingPreset.toThemeData(isDark: true);
+      await tester.pumpWidget(
+        MaterialApp(
+          key: const ValueKey('dark_app'),
+          theme: tradingPreset.toThemeData(isDark: false),
+          darkTheme: darkThemeData,
+          themeMode: ThemeMode.dark,
+          home: Builder(
+            key: const ValueKey('dark_builder'),
+            builder: (context) {
+              resolvedSuccessDark = context.color.success;
+              resolvedErrorDark = context.color.error;
+              resolvedPrimaryDark = context.color.primary;
+              return const SizedBox();
+            },
+          ),
+        ),
+      );
+
+      expect(resolvedSuccessDark, equals(darkProfitGreen));
+      expect(resolvedErrorDark, equals(darkLossCoral));
+      expect(resolvedPrimaryDark, equals(const Color(0xFF1D65AB)));
+    });
+
+    test('ThemeConfig serialization and Controller live updating with dark/light overrides', () {
+      final preset = ThemePreset(
+        id: 'cfg_test',
+        name: 'Config Test',
+        lightAnchor: const Color(0xFFFFFFFF),
+        darkAnchor: const Color(0xFF000000),
+        primaryColor: const Color(0xFF1D65AB),
+        darkPrimaryColor: const Color(0xFF1D65AB),
+        successColor: const Color(0xFF0284C7),
+        darkSuccessColor: const Color(0xFF00C087),
+      );
+
+      final config = ThemeConfig.fromPreset(preset);
+      expect(config.darkPrimaryHex, equals('#1D65AB'));
+      expect(config.darkSuccessHex, equals('#00C087'));
+
+      final json = config.toJson();
+      final revivedConfig = ThemeConfig.fromJson(json);
+      final revivedPreset = revivedConfig.toPreset();
+
+      expect(revivedPreset.darkPrimaryColor, equals(const Color(0xFF1D65AB)));
+      expect(revivedPreset.darkSuccessColor, equals(const Color(0xFF00C087)));
+
+      // Controller live updating
+      final controller = AppThemeController(initialPreset: preset);
+      controller.updateDarkSuccessColor(const Color(0xFF10B981));
+      expect(controller.currentPreset.darkSuccessColor, equals(const Color(0xFF10B981)));
+
+      controller.updateDarkSuccessColor(null);
+      expect(controller.currentPreset.darkSuccessColor, isNull);
     });
   });
 }

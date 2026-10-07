@@ -14,8 +14,22 @@ class AppThemeController extends ChangeNotifier {
   AppThemeController({
     ThemePreset? initialPreset,
     ThemeMode initialThemeMode = ThemeMode.system,
+    List<ThemePreset>? initialCustomPresets,
   })  : _currentPreset = initialPreset ?? BuiltInPresets.slate,
-        _themeMode = initialThemeMode;
+        _themeMode = initialThemeMode {
+    if (initialCustomPresets != null) {
+      _customPresets.addAll(initialCustomPresets);
+    }
+  }
+
+  /// Add a custom preset programmatically.
+  void addCustomPreset(ThemePreset preset) {
+    if (!_customPresets.any((p) => p.id == preset.id)) {
+      _customPresets.add(preset);
+      notifyListeners();
+    }
+  }
+
 
   /// The currently active preset.
   ThemePreset get currentPreset => _currentPreset;
@@ -90,9 +104,45 @@ class AppThemeController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Update the dark mode primary brand color override on the fly.
+  void updateDarkPrimaryColor(Color? color) {
+    _currentPreset = _currentPreset.copyWith(
+      darkPrimaryColor: color,
+      clearDarkPrimaryColor: color == null,
+    );
+    notifyListeners();
+  }
+
+  /// Update the light mode primary brand color override on the fly.
+  void updateLightPrimaryColor(Color? color) {
+    _currentPreset = _currentPreset.copyWith(
+      lightPrimaryColor: color,
+      clearLightPrimaryColor: color == null,
+    );
+    notifyListeners();
+  }
+
   /// Update the error semantic color on the fly.
   void updateErrorColor(Color color) {
     _currentPreset = _currentPreset.copyWith(errorColor: color);
+    notifyListeners();
+  }
+
+  /// Update the dark mode error semantic color override on the fly.
+  void updateDarkErrorColor(Color? color) {
+    _currentPreset = _currentPreset.copyWith(
+      darkErrorColor: color,
+      clearDarkErrorColor: color == null,
+    );
+    notifyListeners();
+  }
+
+  /// Update the light mode error semantic color override on the fly.
+  void updateLightErrorColor(Color? color) {
+    _currentPreset = _currentPreset.copyWith(
+      lightErrorColor: color,
+      clearLightErrorColor: color == null,
+    );
     notifyListeners();
   }
 
@@ -102,15 +152,69 @@ class AppThemeController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Update the dark mode warning semantic color override on the fly.
+  void updateDarkWarningColor(Color? color) {
+    _currentPreset = _currentPreset.copyWith(
+      darkWarningColor: color,
+      clearDarkWarningColor: color == null,
+    );
+    notifyListeners();
+  }
+
+  /// Update the light mode warning semantic color override on the fly.
+  void updateLightWarningColor(Color? color) {
+    _currentPreset = _currentPreset.copyWith(
+      lightWarningColor: color,
+      clearLightWarningColor: color == null,
+    );
+    notifyListeners();
+  }
+
   /// Update the info semantic color on the fly.
   void updateInfoColor(Color color) {
     _currentPreset = _currentPreset.copyWith(infoColor: color);
     notifyListeners();
   }
 
+  /// Update the dark mode info semantic color override on the fly.
+  void updateDarkInfoColor(Color? color) {
+    _currentPreset = _currentPreset.copyWith(
+      darkInfoColor: color,
+      clearDarkInfoColor: color == null,
+    );
+    notifyListeners();
+  }
+
+  /// Update the light mode info semantic color override on the fly.
+  void updateLightInfoColor(Color? color) {
+    _currentPreset = _currentPreset.copyWith(
+      lightInfoColor: color,
+      clearLightInfoColor: color == null,
+    );
+    notifyListeners();
+  }
+
   /// Update the success semantic color on the fly.
   void updateSuccessColor(Color color) {
     _currentPreset = _currentPreset.copyWith(successColor: color);
+    notifyListeners();
+  }
+
+  /// Update the dark mode success semantic color override on the fly.
+  void updateDarkSuccessColor(Color? color) {
+    _currentPreset = _currentPreset.copyWith(
+      darkSuccessColor: color,
+      clearDarkSuccessColor: color == null,
+    );
+    notifyListeners();
+  }
+
+  /// Update the light mode success semantic color override on the fly.
+  void updateLightSuccessColor(Color? color) {
+    _currentPreset = _currentPreset.copyWith(
+      lightSuccessColor: color,
+      clearLightSuccessColor: color == null,
+    );
     notifyListeners();
   }
 
