@@ -80,6 +80,10 @@ class ThemePreset {
   /// Optional exact light mode override for divider color.
   final Color? lightDividerColor;
 
+  /// Optional custom white tone (defaults to pure #FFFFFF).
+  /// Used for text on solid background widgets and dark theme foregrounds.
+  final Color? whiteColor;
+
   /// Corner radius scale preset.
   final ShapePreset shape;
 
@@ -138,6 +142,7 @@ class ThemePreset {
     this.dividerColor,
     this.darkDividerColor,
     this.lightDividerColor,
+    this.whiteColor,
     this.shape = ShapePreset.rounded,
     this.baseRadius,
     this.density = DensityPreset.comfortable,
@@ -179,6 +184,7 @@ class ThemePreset {
       dividerColor: dividerColor,
       darkDividerColor: darkDividerColor,
       lightDividerColor: lightDividerColor,
+      whiteColor: whiteColor,
     );
 
     // 2. Generate AppRadiusTheme
@@ -331,6 +337,7 @@ class ThemePreset {
     Color? dividerColor,
     Color? darkDividerColor,
     Color? lightDividerColor,
+    Color? whiteColor,
     bool clearDarkPrimaryColor = false,
     bool clearLightPrimaryColor = false,
     bool clearDarkErrorColor = false,
@@ -347,6 +354,7 @@ class ThemePreset {
     bool clearDividerColor = false,
     bool clearDarkDividerColor = false,
     bool clearLightDividerColor = false,
+    bool clearWhiteColor = false,
     ShapePreset? shape,
     double? baseRadius,
     DensityPreset? density,
@@ -386,6 +394,7 @@ class ThemePreset {
       dividerColor: clearDividerColor ? null : (dividerColor ?? this.dividerColor),
       darkDividerColor: clearDarkDividerColor ? null : (darkDividerColor ?? this.darkDividerColor),
       lightDividerColor: clearLightDividerColor ? null : (lightDividerColor ?? this.lightDividerColor),
+      whiteColor: clearWhiteColor ? null : (whiteColor ?? this.whiteColor),
       shape: shape ?? this.shape,
       baseRadius: baseRadius ?? this.baseRadius,
       density: density ?? this.density,

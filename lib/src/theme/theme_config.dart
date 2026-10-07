@@ -31,6 +31,7 @@ class ThemeConfig {
   final String? dividerHex;
   final String? darkDividerHex;
   final String? lightDividerHex;
+  final String? whiteHex;
   final String shape;
   final double? baseRadius;
   final String density;
@@ -66,6 +67,7 @@ class ThemeConfig {
     this.dividerHex,
     this.darkDividerHex,
     this.lightDividerHex,
+    this.whiteHex,
     required this.shape,
     this.baseRadius,
     required this.density,
@@ -104,6 +106,7 @@ class ThemeConfig {
       dividerHex: preset.dividerColor != null ? _colorToHex(preset.dividerColor!) : null,
       darkDividerHex: preset.darkDividerColor != null ? _colorToHex(preset.darkDividerColor!) : null,
       lightDividerHex: preset.lightDividerColor != null ? _colorToHex(preset.lightDividerColor!) : null,
+      whiteHex: preset.whiteColor != null ? _colorToHex(preset.whiteColor!) : null,
       shape: preset.shape == ShapePreset.sharp ? 'sharp' : 'rounded',
       baseRadius: preset.baseRadius,
       density: preset.density == DensityPreset.compact ? 'compact' : 'comfortable',
@@ -143,6 +146,7 @@ class ThemeConfig {
       dividerColor: dividerHex != null ? _parseHex(dividerHex!) : null,
       darkDividerColor: darkDividerHex != null ? _parseHex(darkDividerHex!) : null,
       lightDividerColor: lightDividerHex != null ? _parseHex(lightDividerHex!) : null,
+      whiteColor: whiteHex != null ? _parseHex(whiteHex!) : null,
       shape: shape == 'sharp' ? ShapePreset.sharp : ShapePreset.rounded,
       baseRadius: baseRadius,
       density: density == 'compact' ? DensityPreset.compact : DensityPreset.comfortable,
@@ -184,6 +188,7 @@ class ThemeConfig {
     if (dividerHex != null) 'dividerHex': dividerHex,
     if (darkDividerHex != null) 'darkDividerHex': darkDividerHex,
     if (lightDividerHex != null) 'lightDividerHex': lightDividerHex,
+    if (whiteHex != null) 'whiteHex': whiteHex,
     'shape': shape,
     if (baseRadius != null) 'baseRadius': baseRadius,
     'density': density,
@@ -222,6 +227,7 @@ class ThemeConfig {
       dividerHex: json['dividerHex'] as String?,
       darkDividerHex: json['darkDividerHex'] as String?,
       lightDividerHex: json['lightDividerHex'] as String?,
+      whiteHex: json['whiteHex'] as String?,
       shape: json['shape'] as String? ?? 'rounded',
       baseRadius: (json['baseRadius'] as num?)?.toDouble(),
       density: json['density'] as String? ?? 'comfortable',

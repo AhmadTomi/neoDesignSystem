@@ -272,6 +272,15 @@ class AppThemeController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Update the white color override on the fly.
+  void updateWhiteColor(Color? color) {
+    _currentPreset = _currentPreset.copyWith(
+      whiteColor: color,
+      clearWhiteColor: color == null,
+    );
+    notifyListeners();
+  }
+
   /// Set or update the base rounded corner radius on the fly.
   /// Proportionally scales all corner radii (none, xs, sm, md, lg, xl).
   void setBaseRounded(double radius) {

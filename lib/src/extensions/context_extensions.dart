@@ -19,6 +19,9 @@ extension DesignTokensContext on BuildContext {
   /// Semantic alias for [containerBorder].
   Color get border => color.containerBorder;
 
+  /// Constant white color for text on dark/solid widgets across both themes.
+  Color get white => color.white;
+
   /// Active [AppRadiusTheme] instance (directional corner radii).
   AppRadiusTheme get radius =>
       Theme.of(this).extension<AppRadiusTheme>() ?? AppRadiusTheme.rounded();

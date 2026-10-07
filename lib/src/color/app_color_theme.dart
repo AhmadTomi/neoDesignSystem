@@ -47,6 +47,9 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
   /// Standar kontras WCAG untuk menandakan status teks/ikon non-interaktif (38% alpha)
   final Color textDisabled;
 
+  /// Warna putih konstan untuk teks pada background solid/gelap dan teks dark mode.
+  final Color white;
+
   /// Warna aksen utama (Primary Brand) untuk tombol utama, focused border, dan aksen aktif
   final Color primary;
 
@@ -93,6 +96,7 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
     required this.textFieldDisabledFill,
     required this.textFieldDisabledBorder,
     required this.textDisabled,
+    this.white = const Color(0xFFFFFFFF),
     required this.primary,
     required this.onPrimary,
     required this.success,
@@ -148,6 +152,7 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
     Color? dividerColor,
     Color? darkDividerColor,
     Color? lightDividerColor,
+    Color? whiteColor,
     double? c2Delta,
     double? troughDelta,
   }) {
@@ -178,6 +183,7 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
       dividerColor: dividerColor,
       darkDividerColor: darkDividerColor,
       lightDividerColor: lightDividerColor,
+      whiteColor: whiteColor,
       c2Delta: c2Delta,
       troughDelta: troughDelta,
     );
@@ -210,6 +216,7 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
     Color? dividerColor,
     Color? darkDividerColor,
     Color? lightDividerColor,
+    Color? whiteColor,
     double? c2Delta,
     double? troughDelta,
   }) {
@@ -230,6 +237,8 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
 
     final effectiveInfo = infoColor ?? const Color(0xFF06B6D4);
     final oklchInf = OklchColor.fromColor(effectiveInfo);
+
+    final effectiveWhite = whiteColor ?? const Color(0xFFFFFFFF);
 
     if (!isDark) {
       // ----------------- Light Mode Formulas -----------------
@@ -649,6 +658,7 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
         textFieldDisabledFill: colTfDisabledFill,
         textFieldDisabledBorder: colTfDisabledBorder,
         textDisabled: colTextDisabled,
+        white: effectiveWhite,
         primary: colPrimary,
         onPrimary: colOnPrimary,
         success: colSuccess,
@@ -689,7 +699,7 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
 
       final lText = 0.93;
       final cText = 0.015;
-      final oklchText = OklchColor(lText, cText, h);
+      final oklchText = whiteColor != null ? OklchColor.fromColor(whiteColor) : OklchColor(lText, cText, h);
 
       final lTbf = (l4 + 0.065).clamp(0.0, 1.0);
       final cTbf = c > 0.001 ? math.max(c * 1.3, 0.025) : 0.0;
@@ -1099,6 +1109,7 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
         textFieldDisabledFill: colTfDisabledFill,
         textFieldDisabledBorder: colTfDisabledBorder,
         textDisabled: colTextDisabled,
+        white: effectiveWhite,
         primary: colPrimary,
         onPrimary: colOnPrimary,
         success: colSuccess,
@@ -1134,6 +1145,7 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
     Color? textFieldDisabledFill,
     Color? textFieldDisabledBorder,
     Color? textDisabled,
+    Color? white,
     Color? primary,
     Color? onPrimary,
     Color? success,
@@ -1165,6 +1177,7 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
       textFieldDisabledFill: textFieldDisabledFill ?? this.textFieldDisabledFill,
       textFieldDisabledBorder: textFieldDisabledBorder ?? this.textFieldDisabledBorder,
       textDisabled: textDisabled ?? this.textDisabled,
+      white: white ?? this.white,
       primary: primary ?? this.primary,
       onPrimary: onPrimary ?? this.onPrimary,
       success: success ?? this.success,
@@ -1202,6 +1215,7 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
       textFieldDisabledFill: Color.lerp(textFieldDisabledFill, other.textFieldDisabledFill, t) ?? textFieldDisabledFill,
       textFieldDisabledBorder: Color.lerp(textFieldDisabledBorder, other.textFieldDisabledBorder, t) ?? textFieldDisabledBorder,
       textDisabled: Color.lerp(textDisabled, other.textDisabled, t) ?? textDisabled,
+      white: Color.lerp(white, other.white, t) ?? white,
       primary: Color.lerp(primary, other.primary, t) ?? primary,
       onPrimary: Color.lerp(onPrimary, other.onPrimary, t) ?? onPrimary,
       success: Color.lerp(success, other.success, t) ?? success,

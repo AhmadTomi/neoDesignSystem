@@ -881,5 +881,67 @@ void main() {
       );
       expect(resolvedBorder, equals(customRedBorder));
     });
+
+    testWidgets('White token returns constant color across light and dark modes and supports custom preset override', (tester) async {
+      // 1. Default preset white: pure #FFFFFF in light and dark
+      final defaultPreset = BuiltInPresets.slate;
+      final lightTheme = defaultPreset.toThemeData(isDark: false);
+      final darkTheme = defaultPreset.toThemeData(isDark: true);
+
+      final lightColor = lightTheme.extension<AppColorTheme>()!;
+      final darkColor = darkTheme.extension<AppColorTheme>()!;
+
+      expect(lightColor.white, equals(const Color(0xFFFFFFFF)));
+      expect(darkColor.white, equals(const Color(0xFFFFFFFF)));
+
+      // 2. Custom white tone (e.g. Slate Snow #F8FAFC)
+      const customSnow = Color(0xFFF8FAFC);
+      final customPreset = ThemePreset(
+        id: 'snow_preset',
+        name: 'Snow Preset',
+        lightAnchor: const Color(0xFFF4F5F7),
+        darkAnchor: const Color(0xFF101010),
+        primaryColor: const Color(0xFF2563EB),
+        whiteColor: customSnow,
+      );
+
+      final customLight = customPreset.toThemeData(isDark: false).extension<AppColorTheme>()!;
+      final customDark = customPreset.toThemeData(isDark: true).extension<AppColorTheme>()!;
+
+      expect(customLight.white, equals(customSnow));
+      expect(customDark.white, equals(customSnow));
+      // Dark mode textMain harmonizes with custom white
+      expect(customDark.textMain, equals(customSnow));
+
+      // 3. ThemeConfig serialization with whiteHex
+      final config = ThemeConfig.fromPreset(customPreset);
+      expect(config.whiteHex, equals('#F8FAFC'));
+      final revived = ThemeConfig.fromJson(config.toJson()).toPreset();
+      expect(revived.whiteColor, equals(customSnow));
+
+      // 4. Live update via Controller
+      final controller = AppThemeController(initialPreset: customPreset);
+      controller.updateWhiteColor(const Color(0xFFFFFDF5));
+      expect(controller.currentPreset.whiteColor, equals(const Color(0xFFFFFDF5)));
+
+      // 5. context.white and context.color.white access in widget tree
+      Color? contextColorWhite;
+      Color? contextWhiteDirect;
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: customPreset.toThemeData(isDark: false),
+          home: Builder(
+            builder: (context) {
+              contextColorWhite = context.color.white;
+              contextWhiteDirect = context.white;
+              return const SizedBox();
+            },
+          ),
+        ),
+      );
+
+      expect(contextColorWhite, equals(customSnow));
+      expect(contextWhiteDirect, equals(customSnow));
+    });
   });
 }
