@@ -218,6 +218,60 @@ class AppThemeController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Update the border color override on the fly.
+  void updateBorderColor(Color? color) {
+    _currentPreset = _currentPreset.copyWith(
+      borderColor: color,
+      clearBorderColor: color == null,
+    );
+    notifyListeners();
+  }
+
+  /// Update the dark mode border color override on the fly.
+  void updateDarkBorderColor(Color? color) {
+    _currentPreset = _currentPreset.copyWith(
+      darkBorderColor: color,
+      clearDarkBorderColor: color == null,
+    );
+    notifyListeners();
+  }
+
+  /// Update the light mode border color override on the fly.
+  void updateLightBorderColor(Color? color) {
+    _currentPreset = _currentPreset.copyWith(
+      lightBorderColor: color,
+      clearLightBorderColor: color == null,
+    );
+    notifyListeners();
+  }
+
+  /// Update the divider color override on the fly.
+  void updateDividerColor(Color? color) {
+    _currentPreset = _currentPreset.copyWith(
+      dividerColor: color,
+      clearDividerColor: color == null,
+    );
+    notifyListeners();
+  }
+
+  /// Update the dark mode divider color override on the fly.
+  void updateDarkDividerColor(Color? color) {
+    _currentPreset = _currentPreset.copyWith(
+      darkDividerColor: color,
+      clearDarkDividerColor: color == null,
+    );
+    notifyListeners();
+  }
+
+  /// Update the light mode divider color override on the fly.
+  void updateLightDividerColor(Color? color) {
+    _currentPreset = _currentPreset.copyWith(
+      lightDividerColor: color,
+      clearLightDividerColor: color == null,
+    );
+    notifyListeners();
+  }
+
   /// Set or update the base rounded corner radius on the fly.
   /// Proportionally scales all corner radii (none, xs, sm, md, lg, xl).
   void setBaseRounded(double radius) {

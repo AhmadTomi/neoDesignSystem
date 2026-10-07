@@ -25,6 +25,12 @@ class ThemeConfig {
   final String? successHex;
   final String? darkSuccessHex;
   final String? lightSuccessHex;
+  final String? borderHex;
+  final String? darkBorderHex;
+  final String? lightBorderHex;
+  final String? dividerHex;
+  final String? darkDividerHex;
+  final String? lightDividerHex;
   final String shape;
   final double? baseRadius;
   final String density;
@@ -54,6 +60,12 @@ class ThemeConfig {
     this.successHex,
     this.darkSuccessHex,
     this.lightSuccessHex,
+    this.borderHex,
+    this.darkBorderHex,
+    this.lightBorderHex,
+    this.dividerHex,
+    this.darkDividerHex,
+    this.lightDividerHex,
     required this.shape,
     this.baseRadius,
     required this.density,
@@ -86,6 +98,12 @@ class ThemeConfig {
       successHex: preset.successColor != null ? _colorToHex(preset.successColor!) : null,
       darkSuccessHex: preset.darkSuccessColor != null ? _colorToHex(preset.darkSuccessColor!) : null,
       lightSuccessHex: preset.lightSuccessColor != null ? _colorToHex(preset.lightSuccessColor!) : null,
+      borderHex: preset.borderColor != null ? _colorToHex(preset.borderColor!) : null,
+      darkBorderHex: preset.darkBorderColor != null ? _colorToHex(preset.darkBorderColor!) : null,
+      lightBorderHex: preset.lightBorderColor != null ? _colorToHex(preset.lightBorderColor!) : null,
+      dividerHex: preset.dividerColor != null ? _colorToHex(preset.dividerColor!) : null,
+      darkDividerHex: preset.darkDividerColor != null ? _colorToHex(preset.darkDividerColor!) : null,
+      lightDividerHex: preset.lightDividerColor != null ? _colorToHex(preset.lightDividerColor!) : null,
       shape: preset.shape == ShapePreset.sharp ? 'sharp' : 'rounded',
       baseRadius: preset.baseRadius,
       density: preset.density == DensityPreset.compact ? 'compact' : 'comfortable',
@@ -119,6 +137,12 @@ class ThemeConfig {
       successColor: successHex != null ? _parseHex(successHex!) : null,
       darkSuccessColor: darkSuccessHex != null ? _parseHex(darkSuccessHex!) : null,
       lightSuccessColor: lightSuccessHex != null ? _parseHex(lightSuccessHex!) : null,
+      borderColor: borderHex != null ? _parseHex(borderHex!) : null,
+      darkBorderColor: darkBorderHex != null ? _parseHex(darkBorderHex!) : null,
+      lightBorderColor: lightBorderHex != null ? _parseHex(lightBorderHex!) : null,
+      dividerColor: dividerHex != null ? _parseHex(dividerHex!) : null,
+      darkDividerColor: darkDividerHex != null ? _parseHex(darkDividerHex!) : null,
+      lightDividerColor: lightDividerHex != null ? _parseHex(lightDividerHex!) : null,
       shape: shape == 'sharp' ? ShapePreset.sharp : ShapePreset.rounded,
       baseRadius: baseRadius,
       density: density == 'compact' ? DensityPreset.compact : DensityPreset.comfortable,
@@ -154,6 +178,12 @@ class ThemeConfig {
     if (successHex != null) 'successHex': successHex,
     if (darkSuccessHex != null) 'darkSuccessHex': darkSuccessHex,
     if (lightSuccessHex != null) 'lightSuccessHex': lightSuccessHex,
+    if (borderHex != null) 'borderHex': borderHex,
+    if (darkBorderHex != null) 'darkBorderHex': darkBorderHex,
+    if (lightBorderHex != null) 'lightBorderHex': lightBorderHex,
+    if (dividerHex != null) 'dividerHex': dividerHex,
+    if (darkDividerHex != null) 'darkDividerHex': darkDividerHex,
+    if (lightDividerHex != null) 'lightDividerHex': lightDividerHex,
     'shape': shape,
     if (baseRadius != null) 'baseRadius': baseRadius,
     'density': density,
@@ -186,6 +216,12 @@ class ThemeConfig {
       successHex: json['successHex'] as String?,
       darkSuccessHex: json['darkSuccessHex'] as String?,
       lightSuccessHex: json['lightSuccessHex'] as String?,
+      borderHex: json['borderHex'] as String?,
+      darkBorderHex: json['darkBorderHex'] as String?,
+      lightBorderHex: json['lightBorderHex'] as String?,
+      dividerHex: json['dividerHex'] as String?,
+      darkDividerHex: json['darkDividerHex'] as String?,
+      lightDividerHex: json['lightDividerHex'] as String?,
       shape: json['shape'] as String? ?? 'rounded',
       baseRadius: (json['baseRadius'] as num?)?.toDouble(),
       density: json['density'] as String? ?? 'comfortable',

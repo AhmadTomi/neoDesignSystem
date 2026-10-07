@@ -32,6 +32,9 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
   /// Garis pemisah tipis dengan kontras rendah (DIV)
   final Color dividerLine;
 
+  /// Garis batas tepi kontainer fisik untuk Cards, Dialogs, dan Popovers (CBD)
+  final Color containerBorder;
+
   /// Garis tepi fisik tipis (1px) untuk menegaskan lekukan cekung sebelum elemen disentuh (TFB)
   final Color textFieldBorder;
 
@@ -85,6 +88,7 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
     required this.tonalButtonFill,
     required this.tonalButtonText,
     required this.dividerLine,
+    required this.containerBorder,
     required this.textFieldBorder,
     required this.textFieldDisabledFill,
     required this.textFieldDisabledBorder,
@@ -116,6 +120,9 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
   /// Garis redup samar (8% alpha) - Hairline border, disabled outline
   Color get subtleBorder => textMain.withValues(alpha: 0.08);
 
+  /// Convenient semantic alias for [containerBorder].
+  Color get border => containerBorder;
+
   /// Factory constructor that calculates tiered colors from a standard Flutter [Color].
   factory AppColorTheme.fromColor({
     required Color anchorColor,
@@ -135,6 +142,12 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
     Color? infoColor,
     Color? darkInfoColor,
     Color? lightInfoColor,
+    Color? borderColor,
+    Color? darkBorderColor,
+    Color? lightBorderColor,
+    Color? dividerColor,
+    Color? darkDividerColor,
+    Color? lightDividerColor,
     double? c2Delta,
     double? troughDelta,
   }) {
@@ -159,6 +172,12 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
       infoColor: infoColor,
       darkInfoColor: darkInfoColor,
       lightInfoColor: lightInfoColor,
+      borderColor: borderColor,
+      darkBorderColor: darkBorderColor,
+      lightBorderColor: lightBorderColor,
+      dividerColor: dividerColor,
+      darkDividerColor: darkDividerColor,
+      lightDividerColor: lightDividerColor,
       c2Delta: c2Delta,
       troughDelta: troughDelta,
     );
@@ -185,6 +204,12 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
     Color? infoColor,
     Color? darkInfoColor,
     Color? lightInfoColor,
+    Color? borderColor,
+    Color? darkBorderColor,
+    Color? lightBorderColor,
+    Color? dividerColor,
+    Color? darkDividerColor,
+    Color? lightDividerColor,
     double? c2Delta,
     double? troughDelta,
   }) {
@@ -237,9 +262,57 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
       final oklchTbf = OklchColor(lTbf, cTbf, h);
       final oklchTbt = oklchText;
 
-      final lDivider = (anchorL - 0.05).clamp(0.0, 1.0);
-      final cDivider = c * 0.5;
-      final oklchDivider = OklchColor(lDivider, cDivider, h);
+      // Container Border (CBD)
+      final Color colContainerBorder;
+      final double lCb;
+      final double cCb;
+      final String formulaCb;
+      final String hexCb;
+      if (lightBorderColor != null || borderColor != null) {
+        colContainerBorder = lightBorderColor ?? borderColor!;
+        final oklchExact = OklchColor.fromColor(colContainerBorder);
+        lCb = oklchExact.l;
+        cCb = oklchExact.c;
+        hexCb = oklchExact.hexCode;
+        formulaCb = 'Exact border override ($hexCb)';
+      } else {
+        lCb = (anchorL - 0.07).clamp(0.0, 1.0);
+        cCb = c * 0.6;
+        final oklchCb = OklchColor(lCb, cCb, h);
+        colContainerBorder = oklchCb.toColor();
+        hexCb = oklchCb.hexCode;
+        formulaCb = 'anchorL - 0.07 (c * 0.6)';
+      }
+
+      // Divider Line (DIV)
+      final Color colDivider;
+      final double lDivider;
+      final double cDivider;
+      final String formulaDiv;
+      final String hexDiv;
+      if (lightDividerColor != null || dividerColor != null) {
+        colDivider = lightDividerColor ?? dividerColor!;
+        final oklchExact = OklchColor.fromColor(colDivider);
+        lDivider = oklchExact.l;
+        cDivider = oklchExact.c;
+        hexDiv = oklchExact.hexCode;
+        formulaDiv = 'Exact divider override ($hexDiv)';
+      } else if (lightBorderColor != null || borderColor != null) {
+        final oklchB = OklchColor.fromColor(lightBorderColor ?? borderColor!);
+        lDivider = (oklchB.l + 0.04).clamp(0.0, 1.0);
+        cDivider = oklchB.c * 0.7;
+        final oklchDiv = OklchColor(lDivider, cDivider, oklchB.h);
+        colDivider = oklchDiv.toColor();
+        hexDiv = oklchDiv.hexCode;
+        formulaDiv = 'Derived from border (L + 0.04)';
+      } else {
+        lDivider = (anchorL - 0.05).clamp(0.0, 1.0);
+        cDivider = c * 0.5;
+        final oklchDivider = OklchColor(lDivider, cDivider, h);
+        colDivider = oklchDivider.toColor();
+        hexDiv = oklchDivider.hexCode;
+        formulaDiv = 'anchorL - 0.05 (c * 0.5)';
+      }
 
       final lTfBorder = (anchorL - 0.10).clamp(0.0, 1.0);
       const cTfBorder = 0.02;
@@ -373,7 +446,6 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
       final colText = oklchText.toColor();
       final colTbf = oklchTbf.toColor();
       final colTbt = oklchTbt.toColor();
-      final colDivider = oklchDivider.toColor();
       final colTfBorder = oklchTfBorder.toColor();
       final colTfDisabledFill = col3;
       final colTfDisabledBorder = colText.withValues(alpha: 0.08);
@@ -441,14 +513,24 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
           formula: 'L = anchorL, C = c (= C3)',
         ),
         LayerSpec(
+          id: 'CBD',
+          label: 'Container Border',
+          role: 'Card & Modal Perimeter',
+          l: lCb,
+          c: cCb,
+          color: colContainerBorder,
+          hex: hexCb,
+          formula: formulaCb,
+        ),
+        LayerSpec(
           id: 'DIV',
           label: 'Divider Line',
           role: 'Subtle Content Separator',
           l: lDivider,
           c: cDivider,
           color: colDivider,
-          hex: oklchDivider.hexCode,
-          formula: 'anchorL - 0.05 (c * 0.5)',
+          hex: hexDiv,
+          formula: formulaDiv,
         ),
         LayerSpec(
           id: 'C4',
@@ -562,6 +644,7 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
         tonalButtonFill: colTbf,
         tonalButtonText: colTbt,
         dividerLine: colDivider,
+        containerBorder: colContainerBorder,
         textFieldBorder: colTfBorder,
         textFieldDisabledFill: colTfDisabledFill,
         textFieldDisabledBorder: colTfDisabledBorder,
@@ -613,9 +696,73 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
       final oklchTbf = OklchColor(lTbf, cTbf, h);
       final oklchTbt = oklchText;
 
-      final lDivider = (anchorL + 0.05).clamp(0.0, 1.0);
-      final cDivider = c * 0.5;
-      final oklchDivider = OklchColor(lDivider, cDivider, h);
+      // Container Border (CBD)
+      final Color colContainerBorder;
+      final double lCb;
+      final double cCb;
+      final String formulaCb;
+      final String hexCb;
+      if (darkBorderColor != null) {
+        colContainerBorder = darkBorderColor;
+        final oklchExact = OklchColor.fromColor(darkBorderColor);
+        lCb = oklchExact.l;
+        cCb = oklchExact.c;
+        hexCb = oklchExact.hexCode;
+        formulaCb = 'Exact dark border override ($hexCb)';
+      } else if (borderColor != null) {
+        final oklchB = OklchColor.fromColor(borderColor);
+        lCb = (oklchB.l < 0.55 ? oklchB.l + 0.20 : oklchB.l).clamp(0.55, 0.80);
+        cCb = oklchB.c;
+        final oklchCb = OklchColor(lCb, cCb, oklchB.h);
+        colContainerBorder = oklchCb.toColor();
+        hexCb = oklchCb.hexCode;
+        formulaCb = 'Border adapted in OKLCH ($hexCb)';
+      } else {
+        lCb = (anchorL + 0.06).clamp(0.0, 1.0);
+        cCb = c * 0.6;
+        final oklchCb = OklchColor(lCb, cCb, h);
+        colContainerBorder = oklchCb.toColor();
+        hexCb = oklchCb.hexCode;
+        formulaCb = 'anchorL + 0.06 (c * 0.6)';
+      }
+
+      // Divider Line (DIV)
+      final Color colDivider;
+      final double lDivider;
+      final double cDivider;
+      final String formulaDiv;
+      final String hexDiv;
+      if (darkDividerColor != null) {
+        colDivider = darkDividerColor;
+        final oklchExact = OklchColor.fromColor(darkDividerColor);
+        lDivider = oklchExact.l;
+        cDivider = oklchExact.c;
+        hexDiv = oklchExact.hexCode;
+        formulaDiv = 'Exact dark divider override ($hexDiv)';
+      } else if (dividerColor != null) {
+        final oklchD = OklchColor.fromColor(dividerColor);
+        lDivider = (oklchD.l < 0.55 ? oklchD.l + 0.16 : oklchD.l).clamp(0.50, 0.75);
+        cDivider = oklchD.c;
+        final oklchDiv = OklchColor(lDivider, cDivider, oklchD.h);
+        colDivider = oklchDiv.toColor();
+        hexDiv = oklchDiv.hexCode;
+        formulaDiv = 'Divider adapted in OKLCH ($hexDiv)';
+      } else if (darkBorderColor != null || borderColor != null) {
+        final oklchB = OklchColor.fromColor(darkBorderColor ?? colContainerBorder);
+        lDivider = (oklchB.l - 0.04).clamp(0.0, 1.0);
+        cDivider = oklchB.c * 0.7;
+        final oklchDiv = OklchColor(lDivider, cDivider, oklchB.h);
+        colDivider = oklchDiv.toColor();
+        hexDiv = oklchDiv.hexCode;
+        formulaDiv = 'Derived from border (L - 0.04)';
+      } else {
+        lDivider = (anchorL + 0.05).clamp(0.0, 1.0);
+        cDivider = c * 0.5;
+        final oklchDivider = OklchColor(lDivider, cDivider, h);
+        colDivider = oklchDivider.toColor();
+        hexDiv = oklchDivider.hexCode;
+        formulaDiv = 'anchorL + 0.05 (c * 0.5)';
+      }
 
       final lTfBorder = (anchorL + 0.08).clamp(0.0, 1.0);
       const cTfBorder = 0.02;
@@ -749,7 +896,6 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
       final colText = oklchText.toColor();
       final colTbf = oklchTbf.toColor();
       final colTbt = oklchTbt.toColor();
-      final colDivider = oklchDivider.toColor();
       final colTfBorder = oklchTfBorder.toColor();
       final colTfDisabledFill = col3;
       final colTfDisabledBorder = colText.withValues(alpha: 0.08);
@@ -817,14 +963,24 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
           formula: 'L = anchorL, C = c (= C3)',
         ),
         LayerSpec(
+          id: 'CBD',
+          label: 'Container Border',
+          role: 'Card & Modal Perimeter',
+          l: lCb,
+          c: cCb,
+          color: colContainerBorder,
+          hex: hexCb,
+          formula: formulaCb,
+        ),
+        LayerSpec(
           id: 'DIV',
           label: 'Divider Line',
           role: 'Subtle Content Separator',
           l: lDivider,
           c: cDivider,
           color: colDivider,
-          hex: oklchDivider.hexCode,
-          formula: 'anchorL + 0.05 (c * 0.5)',
+          hex: hexDiv,
+          formula: formulaDiv,
         ),
         LayerSpec(
           id: 'C4',
@@ -938,6 +1094,7 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
         tonalButtonFill: colTbf,
         tonalButtonText: colTbt,
         dividerLine: colDivider,
+        containerBorder: colContainerBorder,
         textFieldBorder: colTfBorder,
         textFieldDisabledFill: colTfDisabledFill,
         textFieldDisabledBorder: colTfDisabledBorder,
@@ -972,6 +1129,7 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
     Color? tonalButtonFill,
     Color? tonalButtonText,
     Color? dividerLine,
+    Color? containerBorder,
     Color? textFieldBorder,
     Color? textFieldDisabledFill,
     Color? textFieldDisabledBorder,
@@ -1002,6 +1160,7 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
       tonalButtonFill: tonalButtonFill ?? this.tonalButtonFill,
       tonalButtonText: tonalButtonText ?? this.tonalButtonText,
       dividerLine: dividerLine ?? this.dividerLine,
+      containerBorder: containerBorder ?? this.containerBorder,
       textFieldBorder: textFieldBorder ?? this.textFieldBorder,
       textFieldDisabledFill: textFieldDisabledFill ?? this.textFieldDisabledFill,
       textFieldDisabledBorder: textFieldDisabledBorder ?? this.textFieldDisabledBorder,
@@ -1038,6 +1197,7 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
       tonalButtonFill: Color.lerp(tonalButtonFill, other.tonalButtonFill, t) ?? tonalButtonFill,
       tonalButtonText: Color.lerp(tonalButtonText, other.tonalButtonText, t) ?? tonalButtonText,
       dividerLine: Color.lerp(dividerLine, other.dividerLine, t) ?? dividerLine,
+      containerBorder: Color.lerp(containerBorder, other.containerBorder, t) ?? containerBorder,
       textFieldBorder: Color.lerp(textFieldBorder, other.textFieldBorder, t) ?? textFieldBorder,
       textFieldDisabledFill: Color.lerp(textFieldDisabledFill, other.textFieldDisabledFill, t) ?? textFieldDisabledFill,
       textFieldDisabledBorder: Color.lerp(textFieldDisabledBorder, other.textFieldDisabledBorder, t) ?? textFieldDisabledBorder,
@@ -1168,7 +1328,7 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
           side: BorderSide(
-            color: isDark ? Colors.white.withValues(alpha: 0.12) : subtleBorder,
+            color: containerBorder,
             width: 1.0,
           ),
         ),
@@ -1181,7 +1341,7 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(14),
           side: BorderSide(
-            color: isDark ? Colors.white.withValues(alpha: 0.12) : subtleBorder,
+            color: containerBorder,
             width: 1.0,
           ),
         ),
@@ -1194,7 +1354,8 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
           side: BorderSide(
-            color: isDark ? Colors.white.withValues(alpha: 0.06) : subtleBorder,
+            color: containerBorder,
+            width: 1.0,
           ),
         ),
       ),

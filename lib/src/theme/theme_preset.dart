@@ -62,6 +62,24 @@ class ThemePreset {
   /// Optional exact light mode override for success color.
   final Color? lightSuccessColor;
 
+  /// Optional custom border color override (derives containerBorder and dividerLine).
+  final Color? borderColor;
+
+  /// Optional exact dark mode override for border color.
+  final Color? darkBorderColor;
+
+  /// Optional exact light mode override for border color.
+  final Color? lightBorderColor;
+
+  /// Optional custom divider color override.
+  final Color? dividerColor;
+
+  /// Optional exact dark mode override for divider color.
+  final Color? darkDividerColor;
+
+  /// Optional exact light mode override for divider color.
+  final Color? lightDividerColor;
+
   /// Corner radius scale preset.
   final ShapePreset shape;
 
@@ -114,6 +132,12 @@ class ThemePreset {
     this.successColor,
     this.darkSuccessColor,
     this.lightSuccessColor,
+    this.borderColor,
+    this.darkBorderColor,
+    this.lightBorderColor,
+    this.dividerColor,
+    this.darkDividerColor,
+    this.lightDividerColor,
     this.shape = ShapePreset.rounded,
     this.baseRadius,
     this.density = DensityPreset.comfortable,
@@ -149,6 +173,12 @@ class ThemePreset {
       successColor: successColor,
       darkSuccessColor: darkSuccessColor,
       lightSuccessColor: lightSuccessColor,
+      borderColor: borderColor,
+      darkBorderColor: darkBorderColor,
+      lightBorderColor: lightBorderColor,
+      dividerColor: dividerColor,
+      darkDividerColor: darkDividerColor,
+      lightDividerColor: lightDividerColor,
     );
 
     // 2. Generate AppRadiusTheme
@@ -199,6 +229,8 @@ class ThemePreset {
         surfaceContainer: colorTheme.container2,
         surfaceContainerHigh: colorTheme.container3,
         surfaceContainerHighest: colorTheme.container4,
+        outline: colorTheme.textFieldBorder,
+        outlineVariant: colorTheme.dividerLine,
       ),
       scaffoldBackgroundColor: colorTheme.container1,
       textTheme: typographyTheme.toTextTheme(colorTheme.textMain),
@@ -213,14 +245,14 @@ class ThemePreset {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: radiusTheme.lg.all,
-          side: BorderSide(color: colorTheme.subtleBorder),
+          side: BorderSide(color: colorTheme.containerBorder),
         ),
       ),
       dialogTheme: DialogThemeData(
         backgroundColor: colorTheme.container4,
         shape: RoundedRectangleBorder(
           borderRadius: radiusTheme.xl.all,
-          side: BorderSide(color: colorTheme.subtleBorder),
+          side: BorderSide(color: colorTheme.containerBorder),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -293,6 +325,12 @@ class ThemePreset {
     Color? successColor,
     Color? darkSuccessColor,
     Color? lightSuccessColor,
+    Color? borderColor,
+    Color? darkBorderColor,
+    Color? lightBorderColor,
+    Color? dividerColor,
+    Color? darkDividerColor,
+    Color? lightDividerColor,
     bool clearDarkPrimaryColor = false,
     bool clearLightPrimaryColor = false,
     bool clearDarkErrorColor = false,
@@ -303,6 +341,12 @@ class ThemePreset {
     bool clearLightInfoColor = false,
     bool clearDarkSuccessColor = false,
     bool clearLightSuccessColor = false,
+    bool clearBorderColor = false,
+    bool clearDarkBorderColor = false,
+    bool clearLightBorderColor = false,
+    bool clearDividerColor = false,
+    bool clearDarkDividerColor = false,
+    bool clearLightDividerColor = false,
     ShapePreset? shape,
     double? baseRadius,
     DensityPreset? density,
@@ -336,6 +380,12 @@ class ThemePreset {
       successColor: successColor ?? this.successColor,
       darkSuccessColor: clearDarkSuccessColor ? null : (darkSuccessColor ?? this.darkSuccessColor),
       lightSuccessColor: clearLightSuccessColor ? null : (lightSuccessColor ?? this.lightSuccessColor),
+      borderColor: clearBorderColor ? null : (borderColor ?? this.borderColor),
+      darkBorderColor: clearDarkBorderColor ? null : (darkBorderColor ?? this.darkBorderColor),
+      lightBorderColor: clearLightBorderColor ? null : (lightBorderColor ?? this.lightBorderColor),
+      dividerColor: clearDividerColor ? null : (dividerColor ?? this.dividerColor),
+      darkDividerColor: clearDarkDividerColor ? null : (darkDividerColor ?? this.darkDividerColor),
+      lightDividerColor: clearLightDividerColor ? null : (lightDividerColor ?? this.lightDividerColor),
       shape: shape ?? this.shape,
       baseRadius: baseRadius ?? this.baseRadius,
       density: density ?? this.density,

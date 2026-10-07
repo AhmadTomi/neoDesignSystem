@@ -813,5 +813,73 @@ void main() {
       controller.updateDarkSuccessColor(null);
       expect(controller.currentPreset.darkSuccessColor, isNull);
     });
+
+    testWidgets('ContainerBorder and DividerLine anchor calculations and custom overrides', (tester) async {
+      // 1. Default anchor calculations
+      final defaultLight = AppColorTheme.fromColor(
+        anchorColor: const Color(0xFFF4F5F7),
+        isDark: false,
+      );
+      // Light anchor default: containerBorder is darker than anchor (L - 0.07)
+      expect(defaultLight.containerBorder, isNotNull);
+      expect(defaultLight.border, equals(defaultLight.containerBorder));
+      expect(defaultLight.dividerLine, isNotNull);
+
+      final defaultDark = AppColorTheme.fromColor(
+        anchorColor: const Color(0xFF101010),
+        isDark: true,
+      );
+      // Dark anchor default: containerBorder is lighter than anchor (L + 0.06)
+      expect(defaultDark.containerBorder, isNotNull);
+      expect(defaultDark.border, equals(defaultDark.containerBorder));
+      expect(defaultDark.dividerLine, isNotNull);
+
+      // 2. Custom Border Color (e.g. Red border #EF4444)
+      const customRedBorder = Color(0xFFEF4444);
+      final redPreset = ThemePreset(
+        id: 'red_border_preset',
+        name: 'Red Border Preset',
+        lightAnchor: const Color(0xFFF4F5F7),
+        darkAnchor: const Color(0xFF101010),
+        primaryColor: const Color(0xFF2563EB),
+        borderColor: customRedBorder,
+      );
+
+      final redThemeLight = redPreset.toThemeData(isDark: false);
+      final redPaletteLight = redThemeLight.extension<AppColorTheme>()!;
+      expect(redPaletteLight.containerBorder, equals(customRedBorder));
+      expect(redPaletteLight.border, equals(customRedBorder));
+      // Card and Dialog theme borders should use containerBorder
+      expect(redThemeLight.cardTheme.shape, isA<RoundedRectangleBorder>());
+      final cardBorderSide = (redThemeLight.cardTheme.shape as RoundedRectangleBorder).side;
+      expect(cardBorderSide.color, equals(customRedBorder));
+
+      // 3. Serialization with custom border & divider hex
+      final config = ThemeConfig.fromPreset(redPreset);
+      expect(config.borderHex, equals('#EF4444'));
+      final revivedPreset = ThemeConfig.fromJson(config.toJson()).toPreset();
+      expect(revivedPreset.borderColor, equals(customRedBorder));
+
+      // 4. Controller live update of border color
+      final controller = AppThemeController(initialPreset: redPreset);
+      controller.updateBorderColor(const Color(0xFF10B981));
+      expect(controller.currentPreset.borderColor, equals(const Color(0xFF10B981)));
+
+      // 5. BuildContext extension access
+      Color? resolvedBorder;
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: redThemeLight,
+          home: Builder(
+            builder: (context) {
+              resolvedBorder = context.containerBorder;
+              expect(context.border, equals(context.containerBorder));
+              return const SizedBox();
+            },
+          ),
+        ),
+      );
+      expect(resolvedBorder, equals(customRedBorder));
+    });
   });
 }

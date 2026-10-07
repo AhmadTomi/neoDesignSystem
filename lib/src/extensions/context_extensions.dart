@@ -13,6 +13,12 @@ extension DesignTokensContext on BuildContext {
   /// Backwards-compatibility alias for [color].
   AppColorTheme get palette => color;
 
+  /// Shortcut to [AppColorTheme.containerBorder].
+  Color get containerBorder => color.containerBorder;
+
+  /// Semantic alias for [containerBorder].
+  Color get border => color.containerBorder;
+
   /// Active [AppRadiusTheme] instance (directional corner radii).
   AppRadiusTheme get radius =>
       Theme.of(this).extension<AppRadiusTheme>() ?? AppRadiusTheme.rounded();
