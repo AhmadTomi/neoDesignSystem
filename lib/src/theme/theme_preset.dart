@@ -271,9 +271,12 @@ class ThemePreset {
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
+        isDense: true,
         filled: true,
         fillColor: colorTheme.textFieldFill,
         contentPadding: spacingTheme.insetSquish,
+        prefixIconConstraints: const BoxConstraints(minWidth: 38, minHeight: 38),
+        suffixIconConstraints: const BoxConstraints(minWidth: 38, minHeight: 38),
         enabledBorder: OutlineInputBorder(
           borderRadius: radiusTheme.md.all,
           borderSide: BorderSide(color: colorTheme.textFieldBorder),
@@ -293,6 +296,17 @@ class ThemePreset {
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: radiusTheme.md.all,
           borderSide: BorderSide(color: colorTheme.error, width: 1.8),
+        ),
+        errorStyle: typographyTheme.labelSm.copyWith(
+          color: colorTheme.error,
+          fontSize: 11.5,
+          fontWeight: FontWeight.w500,
+        ),
+        hintStyle: typographyTheme.bodyMd.copyWith(
+          color: colorTheme.textMuted,
+        ),
+        labelStyle: typographyTheme.bodyMd.copyWith(
+          color: colorTheme.textSecondary,
         ),
       ),
       dividerTheme: DividerThemeData(

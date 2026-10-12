@@ -280,8 +280,11 @@ Flutter_Theme_Mapping:
     backgroundColor: palette.primary (PRI)
     foregroundColor: palette.onPrimary
   inputDecorationTheme:
+    isDense: true
     filled: true
     fillColor: palette.textFieldFill (TF)
+    contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 10) (or spacingTheme.insetSquish)
+    prefixIconConstraints / suffixIconConstraints: BoxConstraints(minWidth: 38, minHeight: 38)
     enabledBorder.color: palette.textFieldBorder (TFB)
     focusedBorder.color: palette.primary (PRI)
     disabledBorder.color: palette.textFieldDisabledBorder (textMain @ 0.08a)

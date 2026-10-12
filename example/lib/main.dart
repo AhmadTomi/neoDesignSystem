@@ -160,6 +160,8 @@ class _OklchPaletteDemoAppState extends State<OklchPaletteDemoApp> {
                   controller: nameController,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                     labelText: 'Nama Preset',
                     labelStyle: const TextStyle(color: Color(0xFF94A3B8)),
                     filled: true,
@@ -1349,49 +1351,27 @@ class StackPreviewCard extends StatelessWidget {
                           prefixIcon: Icon(
                             Icons.search_rounded,
                             color: palette.textSecondary,
+                            size: 20,
                           ),
                           suffixIcon: Padding(
-                            padding: spacing.insetSquish,
-                            child: Container(
-                              padding: spacing.insetSquish,
-                              decoration: BoxDecoration(
-                                color: palette.container3.withValues(
-                                  alpha: 0.8,
+                            padding: const EdgeInsets.only(right: 8),
+                            child: UnconstrainedBox(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: palette.container3.withValues(
+                                    alpha: 0.8,
+                                  ),
+                                  borderRadius: radius.xs.all,
                                 ),
-                                borderRadius: radius.xs.all,
-                              ),
-                              child: Text(
-                                'L: ${palette.specs[3].l.toStringAsFixed(2)}',
-                                style: text.labelSmall?.tabular.slashZero?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: palette.textMain,
+                                child: Text(
+                                  'L: ${palette.specs[3].l.toStringAsFixed(2)}',
+                                  style: text.labelSmall?.tabular.slashZero?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: palette.textMain,
+                                  ),
                                 ),
                               ),
-                            ),
-                          ),
-                          filled: true,
-                          fillColor: palette.textFieldFill,
-                          contentPadding: spacing.insetMd,
-                          // Border fisik tipis 1px penegas cekung (Default/Unfocused)
-                          border: OutlineInputBorder(
-                            borderRadius: radius.md.all,
-                            borderSide: BorderSide(
-                              color: palette.textFieldBorder,
-                              width: 1.0,
-                            ),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: radius.md.all,
-                            borderSide: BorderSide(
-                              color: palette.textFieldBorder,
-                              width: 1.0,
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: radius.md.all,
-                            borderSide: BorderSide(
-                              color: palette.primary,
-                              width: 1.5,
                             ),
                           ),
                         ),
@@ -1506,35 +1486,27 @@ class StackPreviewCard extends StatelessWidget {
                             size: 20,
                           ),
                           suffixIcon: Padding(
-                            padding: spacing.insetSquish,
-                            child: Container(
-                              padding: spacing.insetSquish,
-                              decoration: BoxDecoration(
-                                color: palette.textDisabled.withValues(
-                                  alpha: 0.08,
+                            padding: const EdgeInsets.only(right: 8),
+                            child: UnconstrainedBox(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: palette.textDisabled.withValues(
+                                    alpha: 0.08,
+                                  ),
+                                  borderRadius: radius.xs.all,
                                 ),
-                                borderRadius: radius.xs.all,
-                              ),
-                              child: Text(
-                                'L: ${palette.specs[2].l.toStringAsFixed(2)}',
-                                style: text.labelSmall?.tabular.slashZero?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: palette.textDisabled,
+                                child: Text(
+                                  'L: ${palette.specs[2].l.toStringAsFixed(2)}',
+                                  style: text.labelSmall?.tabular.slashZero?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: palette.textDisabled,
+                                  ),
                                 ),
                               ),
                             ),
                           ),
-                          filled: true,
                           fillColor: palette.textFieldDisabledFill,
-                          contentPadding: spacing.insetMd,
-                          // Disabled Border: textMain dengan alpha 0.08
-                          disabledBorder: OutlineInputBorder(
-                            borderRadius: radius.md.all,
-                            borderSide: BorderSide(
-                              color: palette.textFieldDisabledBorder,
-                              width: 1.0,
-                            ),
-                          ),
                         ),
                       ),
                       spacing.vGapXs,

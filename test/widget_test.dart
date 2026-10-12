@@ -274,6 +274,10 @@ void main() {
       expect(lightTheme.colorScheme.onPrimary, light.onPrimary);
       expect(lightTheme.colorScheme.error, light.error);
       expect(lightTheme.colorScheme.onError, light.onError);
+      expect(lightTheme.inputDecorationTheme.isDense, true);
+      expect(lightTheme.inputDecorationTheme.contentPadding, const EdgeInsets.symmetric(horizontal: 14, vertical: 10));
+      expect(lightTheme.inputDecorationTheme.prefixIconConstraints, const BoxConstraints(minWidth: 38, minHeight: 38));
+      expect(lightTheme.inputDecorationTheme.suffixIconConstraints, const BoxConstraints(minWidth: 38, minHeight: 38));
       expect(lightTheme.inputDecorationTheme.fillColor, light.textFieldFill);
       expect(lightTheme.inputDecorationTheme.enabledBorder?.borderSide.color, light.textFieldBorder);
       expect(lightTheme.inputDecorationTheme.focusedBorder?.borderSide.color, light.primary);
@@ -294,6 +298,10 @@ void main() {
       expect(darkTheme.colorScheme.onPrimary, dark.onPrimary);
       expect(darkTheme.colorScheme.error, dark.error);
       expect(darkTheme.colorScheme.onError, dark.onError);
+      expect(darkTheme.inputDecorationTheme.isDense, true);
+      expect(darkTheme.inputDecorationTheme.contentPadding, const EdgeInsets.symmetric(horizontal: 14, vertical: 10));
+      expect(darkTheme.inputDecorationTheme.prefixIconConstraints, const BoxConstraints(minWidth: 38, minHeight: 38));
+      expect(darkTheme.inputDecorationTheme.suffixIconConstraints, const BoxConstraints(minWidth: 38, minHeight: 38));
       expect(darkTheme.inputDecorationTheme.fillColor, dark.textFieldFill);
       expect(darkTheme.inputDecorationTheme.enabledBorder?.borderSide.color, dark.textFieldBorder);
       expect(darkTheme.inputDecorationTheme.focusedBorder?.borderSide.color, dark.primary);
@@ -377,9 +385,12 @@ void main() {
       final slate = BuiltInPresets.slate;
       final theme = slate.toThemeData(isDark: false);
       expect(theme.scaffoldBackgroundColor, isNotNull);
-      expect(theme.extension<AppColorTheme>(), isNotNull);
-      expect(theme.extension<AppRadiusTheme>(), isNotNull);
-      expect(theme.extension<AppSpacingTheme>(), isNotNull);
+      final spacing = theme.extension<AppSpacingTheme>()!;
+      expect(theme.inputDecorationTheme.isDense, true);
+      expect(theme.inputDecorationTheme.contentPadding, spacing.insetSquish);
+      expect(theme.inputDecorationTheme.prefixIconConstraints, const BoxConstraints(minWidth: 38, minHeight: 38));
+      expect(theme.inputDecorationTheme.suffixIconConstraints, const BoxConstraints(minWidth: 38, minHeight: 38));
+      expect(theme.inputDecorationTheme.errorStyle?.color, theme.extension<AppColorTheme>()!.error);
     });
 
     test('Neo Trading built-in preset has expected properties and produces valid ThemeData', () {

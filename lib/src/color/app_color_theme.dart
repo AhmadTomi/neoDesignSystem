@@ -1279,27 +1279,30 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
 
       // Input Decoration (TextFields)
       inputDecorationTheme: InputDecorationTheme(
+        isDense: true,
         filled: true,
         fillColor: textFieldFill,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        prefixIconConstraints: const BoxConstraints(minWidth: 38, minHeight: 38),
+        suffixIconConstraints: const BoxConstraints(minWidth: 38, minHeight: 38),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
           borderSide: BorderSide(color: textFieldBorder, width: 1.0),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
           borderSide: BorderSide(color: primary, width: 1.8),
         ),
         disabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
           borderSide: BorderSide(color: textFieldDisabledBorder, width: 1.0),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
           borderSide: BorderSide(color: error, width: 1.2),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
           borderSide: BorderSide(color: error, width: 1.8),
         ),
         errorStyle: TextStyle(
@@ -1307,8 +1310,8 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
           fontSize: 11.5,
           fontWeight: FontWeight.w500,
         ),
-        hintStyle: TextStyle(color: textMuted),
-        labelStyle: TextStyle(color: textSecondary),
+        hintStyle: TextStyle(color: textMuted, fontSize: 13.5),
+        labelStyle: TextStyle(color: textSecondary, fontSize: 13.5),
       ),
 
       // Button Themes
