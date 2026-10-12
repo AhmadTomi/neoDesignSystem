@@ -357,6 +357,7 @@ void main() {
 
     test('Compact density pure dense without touch target limits', () {
       final compact = AppSpacingTheme.compact();
+      expect(compact.insetSquish, const EdgeInsets.symmetric(horizontal: 8, vertical: 7));
       expect(compact.insetSm, const EdgeInsets.all(4));
       expect(compact.insetMd, const EdgeInsets.all(10));
       expect(compact.vGapSm.height, 6.0);
@@ -398,12 +399,17 @@ void main() {
       expect(trading.id, 'neo_trading');
       expect(trading.name, 'Neo Trading');
       expect(trading.description, 'Specialized trading interface with high contrast and compact metrics.');
-      expect(trading.lightAnchor, const Color(0xFFF4F5F7));
-      expect(trading.darkAnchor, const Color(0xFF101010));
+      expect(trading.lightAnchor, const Color(0xFFFCFDFD));
+      expect(trading.darkAnchor, const Color(0xFF1A1A1A));
       expect(trading.primaryColor, const Color(0xFF1D65AB));
-      expect(trading.errorColor, const Color(0xFFDC2626));
-      expect(trading.warningColor, const Color(0xFFD97706));
+      expect(trading.darkPrimaryColor, const Color(0xFF1D65AB));
+      expect(trading.errorColor, const Color(0xFFFE3E3F));
+      expect(trading.warningColor, const Color(0xFFF2960E));
       expect(trading.infoColor, const Color(0xFF417BD2));
+      expect(trading.successColor, const Color(0xFF07B667));
+      expect(trading.darkSuccessColor, const Color(0xFF07B667));
+      expect(trading.lightSuccessColor, const Color(0xFF417BD2));
+      expect(trading.whiteColor, const Color(0xFFC5C5C7));
       expect(trading.shape, ShapePreset.rounded);
       expect(trading.density, DensityPreset.compact);
       expect(trading.fontFamily, 'Inter');
@@ -413,6 +419,8 @@ void main() {
       expect(trading.isBuiltIn, isTrue);
 
       expect(BuiltInPresets.neoTrading, equals(trading));
+      expect(NeoTradingTheme.preset, equals(trading));
+      expect(NeoTradingTheme.theme, equals(trading));
       expect(BuiltInPresets.all, contains(trading));
 
       final themeLight = trading.toThemeData(isDark: false);
@@ -421,6 +429,10 @@ void main() {
       expect(themeLight.extension<AppRadiusTheme>()?.md.value, 4.0);
       expect(themeLight.extension<AppSpacingTheme>()?.gapMd, 8.0);
       expect(themeLight.textTheme.bodyMedium?.fontSize, 12.0);
+      expect(themeLight.inputDecorationTheme.isDense, true);
+      expect(themeLight.inputDecorationTheme.contentPadding, themeLight.extension<AppSpacingTheme>()?.insetSquish);
+      expect(themeLight.inputDecorationTheme.prefixIconConstraints, const BoxConstraints(minWidth: 32, minHeight: 32));
+      expect(themeLight.inputDecorationTheme.suffixIconConstraints, const BoxConstraints(minWidth: 32, minHeight: 32));
 
       final themeDark = trading.toThemeData(isDark: true);
       expect(themeDark.brightness, Brightness.dark);

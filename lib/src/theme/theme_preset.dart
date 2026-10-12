@@ -275,8 +275,14 @@ class ThemePreset {
         filled: true,
         fillColor: colorTheme.textFieldFill,
         contentPadding: spacingTheme.insetSquish,
-        prefixIconConstraints: const BoxConstraints(minWidth: 38, minHeight: 38),
-        suffixIconConstraints: const BoxConstraints(minWidth: 38, minHeight: 38),
+        prefixIconConstraints: BoxConstraints(
+          minWidth: density == DensityPreset.compact ? 32 : 38,
+          minHeight: density == DensityPreset.compact ? 32 : 38,
+        ),
+        suffixIconConstraints: BoxConstraints(
+          minWidth: density == DensityPreset.compact ? 32 : 38,
+          minHeight: density == DensityPreset.compact ? 32 : 38,
+        ),
         enabledBorder: OutlineInputBorder(
           borderRadius: radiusTheme.md.all,
           borderSide: BorderSide(color: colorTheme.textFieldBorder),
@@ -482,12 +488,17 @@ abstract final class BuiltInPresets {
     id: 'neo_trading',
     name: 'Neo Trading',
     description: 'Specialized trading interface with high contrast and compact metrics.',
-    lightAnchor: Color(0xFFF4F5F7),
-    darkAnchor: Color(0xFF101010),
+    lightAnchor: Color(0xFFFCFDFD),
+    darkAnchor: Color(0xFF1A1A1A),
     primaryColor: Color(0xFF1D65AB),
-    errorColor: Color(0xFFDC2626),
-    warningColor: Color(0xFFD97706),
-    infoColor: Color(0xFF417BD2),
+    darkPrimaryColor: Color(0xFF1D65AB),
+    errorColor: Color(0xFFFE3E3F),
+    warningColor: Color(0xFFF2960E),
+    infoColor: Color(0xff417BD2),
+    successColor: Color(0xFF07B667),
+    darkSuccessColor: Color(0xFF07B667),
+    lightSuccessColor: Color(0xFF417BD2),
+    whiteColor: Color(0xFFC5C5C7),
     shape: ShapePreset.rounded,
     density: DensityPreset.compact,
     fontFamily: 'Inter',
@@ -508,5 +519,13 @@ abstract final class BuiltInPresets {
     amber,
     trading,
   ];
+}
+
+/// Backwards compatibility and convenient access for Neo Trading preset.
+class NeoTradingTheme {
+  static const ThemePreset preset = BuiltInPresets.trading;
+
+  /// Backwards compatibility alias for [preset].
+  static ThemePreset get theme => preset;
 }
 

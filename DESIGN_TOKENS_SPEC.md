@@ -68,7 +68,7 @@ Sistem spacing dirancang bebas dari *token bloat* dan **tidak membatasi touch ta
 
 | Token | Peruntukan | Comfortable (Default) | Compact (Pure Dense) |
 | :--- | :--- | :---: | :---: |
-| `insetSquish` | Tombol, TextField, Chip (vertikal ramping) | `h: 14, v: 10` | `h: 8, v: 4` |
+| `insetSquish` | Tombol, TextField, Chip (vertikal ramping) | `h: 14, v: 10` | `h: 8, v: 7` |
 | `insetSm` | List item, compact panel | `8px` | `6px` |
 | `insetMd` | Card normal (C2, C3) | `16px` | `10px` |
 | `insetLg` | Modal dialog (C4), popover | `24px` | `16px` |

@@ -10,7 +10,7 @@ void main() {
 /// Main Application Entry Point
 class OklchPaletteDemoApp extends StatefulWidget {
   /// Specialized Neo Trading Preset configured for the showcase.
-  static const ThemePreset neoTradingPreset = BuiltInPresets.trading;
+  static const ThemePreset neoTradingPreset = NeoTradingTheme.preset;
 
   const OklchPaletteDemoApp({super.key});
 
@@ -30,7 +30,7 @@ enum ColorPickerTarget {
 
 class _OklchPaletteDemoAppState extends State<OklchPaletteDemoApp> {
   final AppThemeController _themeController = AppThemeController(
-    initialPreset: BuiltInPresets.slate,
+    initialPreset: NeoTradingTheme.preset,
   );
   ShapePreset _shape = ShapePreset.rounded;
   DensityPreset _density = DensityPreset.comfortable;
@@ -67,7 +67,7 @@ class _OklchPaletteDemoAppState extends State<OklchPaletteDemoApp> {
   @override
   void initState() {
     super.initState();
-    _applyPreset(BuiltInPresets.slate, notify: false);
+    _applyPreset(NeoTradingTheme.preset, notify: false);
   }
 
   void _applyPreset(ThemePreset preset, {bool notify = true}) {
@@ -557,6 +557,7 @@ class _OklchPaletteDemoAppState extends State<OklchPaletteDemoApp> {
   @override
   Widget build(BuildContext context) {
     // Generate Light and Dark LayerPalettes dynamically with separated anchor parameters
+    final current = _themeController.currentPreset;
     final lightPalette = LayerPalette.fromAnchor(
       anchorL: _lightAnchorL,
       c: _lightChroma,
@@ -565,10 +566,21 @@ class _OklchPaletteDemoAppState extends State<OklchPaletteDemoApp> {
       c2Delta: _lightC2Delta,
       troughDelta: _lightTroughDelta,
       primaryColor: _primaryColor,
+      darkPrimaryColor: current.darkPrimaryColor,
+      lightPrimaryColor: current.lightPrimaryColor,
       successColor: _successColor,
+      darkSuccessColor: current.darkSuccessColor,
+      lightSuccessColor: current.lightSuccessColor,
       warningColor: _warningColor,
+      darkWarningColor: current.darkWarningColor,
+      lightWarningColor: current.lightWarningColor,
       errorColor: _errorColor,
+      darkErrorColor: current.darkErrorColor,
+      lightErrorColor: current.lightErrorColor,
       infoColor: _infoColor,
+      darkInfoColor: current.darkInfoColor,
+      lightInfoColor: current.lightInfoColor,
+      whiteColor: current.whiteColor,
     );
 
     final darkPalette = LayerPalette.fromAnchor(
@@ -579,10 +591,21 @@ class _OklchPaletteDemoAppState extends State<OklchPaletteDemoApp> {
       c2Delta: _darkC2Delta,
       troughDelta: _darkTroughDelta,
       primaryColor: _primaryColor,
+      darkPrimaryColor: current.darkPrimaryColor,
+      lightPrimaryColor: current.lightPrimaryColor,
       successColor: _successColor,
+      darkSuccessColor: current.darkSuccessColor,
+      lightSuccessColor: current.lightSuccessColor,
       warningColor: _warningColor,
+      darkWarningColor: current.darkWarningColor,
+      lightWarningColor: current.lightWarningColor,
       errorColor: _errorColor,
+      darkErrorColor: current.darkErrorColor,
+      lightErrorColor: current.lightErrorColor,
       infoColor: _infoColor,
+      darkInfoColor: current.darkInfoColor,
+      lightInfoColor: current.lightInfoColor,
+      whiteColor: current.whiteColor,
     );
 
     return MaterialApp(
@@ -826,8 +849,20 @@ class _OklchPaletteDemoAppState extends State<OklchPaletteDemoApp> {
                       density: _density,
                     );
 
+                    final isCompact = _density == DensityPreset.compact;
                     final lightThemeWidget = Theme(
                       data: lightPalette.toThemeData().copyWith(
+                        inputDecorationTheme: lightPalette.toThemeData().inputDecorationTheme.copyWith(
+                          contentPadding: spacingTheme.insetSquish,
+                          prefixIconConstraints: BoxConstraints(
+                            minWidth: isCompact ? 32 : 38,
+                            minHeight: isCompact ? 32 : 38,
+                          ),
+                          suffixIconConstraints: BoxConstraints(
+                            minWidth: isCompact ? 32 : 38,
+                            minHeight: isCompact ? 32 : 38,
+                          ),
+                        ),
                         extensions: [
                           lightPalette,
                           radiusTheme,
@@ -845,6 +880,17 @@ class _OklchPaletteDemoAppState extends State<OklchPaletteDemoApp> {
 
                     final darkThemeWidget = Theme(
                       data: darkPalette.toThemeData().copyWith(
+                        inputDecorationTheme: darkPalette.toThemeData().inputDecorationTheme.copyWith(
+                          contentPadding: spacingTheme.insetSquish,
+                          prefixIconConstraints: BoxConstraints(
+                            minWidth: isCompact ? 32 : 38,
+                            minHeight: isCompact ? 32 : 38,
+                          ),
+                          suffixIconConstraints: BoxConstraints(
+                            minWidth: isCompact ? 32 : 38,
+                            minHeight: isCompact ? 32 : 38,
+                          ),
+                        ),
                         extensions: [
                           darkPalette,
                           radiusTheme,
