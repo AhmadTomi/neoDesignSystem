@@ -276,6 +276,7 @@ void main() {
       expect(lightTheme.colorScheme.onError, light.onError);
       expect(lightTheme.inputDecorationTheme.isDense, true);
       expect(lightTheme.inputDecorationTheme.contentPadding, const EdgeInsets.symmetric(horizontal: 14, vertical: 10));
+      expect(lightTheme.inputDecorationTheme.constraints, const BoxConstraints(minHeight: 38.0));
       expect(lightTheme.inputDecorationTheme.prefixIconConstraints, const BoxConstraints(minWidth: 38, minHeight: 38));
       expect(lightTheme.inputDecorationTheme.suffixIconConstraints, const BoxConstraints(minWidth: 38, minHeight: 38));
       expect(lightTheme.inputDecorationTheme.fillColor, light.textFieldFill);
@@ -300,6 +301,7 @@ void main() {
       expect(darkTheme.colorScheme.onError, dark.onError);
       expect(darkTheme.inputDecorationTheme.isDense, true);
       expect(darkTheme.inputDecorationTheme.contentPadding, const EdgeInsets.symmetric(horizontal: 14, vertical: 10));
+      expect(darkTheme.inputDecorationTheme.constraints, const BoxConstraints(minHeight: 38.0));
       expect(darkTheme.inputDecorationTheme.prefixIconConstraints, const BoxConstraints(minWidth: 38, minHeight: 38));
       expect(darkTheme.inputDecorationTheme.suffixIconConstraints, const BoxConstraints(minWidth: 38, minHeight: 38));
       expect(darkTheme.inputDecorationTheme.fillColor, dark.textFieldFill);
@@ -382,62 +384,59 @@ void main() {
 
   group('ThemePreset and AppThemeController Tests', () {
     test('Built-in presets exist and generate valid ThemeData', () {
-      expect(BuiltInPresets.all.length, greaterThanOrEqualTo(5));
+      expect(BuiltInPresets.all.length, equals(4));
       final slate = BuiltInPresets.slate;
       final theme = slate.toThemeData(isDark: false);
       expect(theme.scaffoldBackgroundColor, isNotNull);
       final spacing = theme.extension<AppSpacingTheme>()!;
       expect(theme.inputDecorationTheme.isDense, true);
       expect(theme.inputDecorationTheme.contentPadding, spacing.insetSquish);
+      expect(theme.inputDecorationTheme.constraints, const BoxConstraints(minHeight: 38.0));
       expect(theme.inputDecorationTheme.prefixIconConstraints, const BoxConstraints(minWidth: 38, minHeight: 38));
       expect(theme.inputDecorationTheme.suffixIconConstraints, const BoxConstraints(minWidth: 38, minHeight: 38));
       expect(theme.inputDecorationTheme.errorStyle?.color, theme.extension<AppColorTheme>()!.error);
     });
 
-    test('Neo Trading built-in preset has expected properties and produces valid ThemeData', () {
-      final trading = BuiltInPresets.trading;
-      expect(trading.id, 'neo_trading');
-      expect(trading.name, 'Neo Trading');
-      expect(trading.description, 'Specialized trading interface with high contrast and compact metrics.');
-      expect(trading.lightAnchor, const Color(0xFFFCFDFD));
-      expect(trading.darkAnchor, const Color(0xFF1A1A1A));
-      expect(trading.primaryColor, const Color(0xFF1D65AB));
-      expect(trading.darkPrimaryColor, const Color(0xFF1D65AB));
-      expect(trading.errorColor, const Color(0xFFFE3E3F));
-      expect(trading.warningColor, const Color(0xFFF2960E));
-      expect(trading.infoColor, const Color(0xFF417BD2));
-      expect(trading.successColor, const Color(0xFF07B667));
-      expect(trading.darkSuccessColor, const Color(0xFF07B667));
-      expect(trading.lightSuccessColor, const Color(0xFF417BD2));
-      expect(trading.whiteColor, const Color(0xFFC5C5C7));
-      expect(trading.shape, ShapePreset.rounded);
-      expect(trading.density, DensityPreset.compact);
-      expect(trading.fontFamily, 'Inter');
-      expect(trading.baseFontSize, 13);
-      expect(trading.baseRadius, 4);
-      expect(trading.baseSpacing, 8);
-      expect(trading.isBuiltIn, isTrue);
+    test('Emerald Enterprise built-in preset has expected properties and produces valid compact ThemeData with 30px minHeight', () {
+      final emerald = BuiltInPresets.emerald;
+      expect(emerald.id, 'emerald_enterprise');
+      expect(emerald.name, 'Emerald Enterprise');
+      expect(emerald.shape, ShapePreset.sharp);
+      expect(emerald.density, DensityPreset.compact);
+      expect(BuiltInPresets.all, contains(emerald));
 
-      expect(BuiltInPresets.neoTrading, equals(trading));
-      expect(NeoTradingTheme.preset, equals(trading));
-      expect(NeoTradingTheme.theme, equals(trading));
-      expect(BuiltInPresets.all, contains(trading));
-
-      final themeLight = trading.toThemeData(isDark: false);
+      final themeLight = emerald.toThemeData(isDark: false);
       expect(themeLight.brightness, Brightness.light);
-      expect(themeLight.extension<AppColorTheme>()?.primary, const Color(0xFF1D65AB));
-      expect(themeLight.extension<AppRadiusTheme>()?.md.value, 4.0);
-      expect(themeLight.extension<AppSpacingTheme>()?.gapMd, 8.0);
-      expect(themeLight.textTheme.bodyMedium?.fontSize, 12.0);
+      expect(themeLight.extension<AppColorTheme>()?.primary, const Color(0xFF059669));
       expect(themeLight.inputDecorationTheme.isDense, true);
       expect(themeLight.inputDecorationTheme.contentPadding, themeLight.extension<AppSpacingTheme>()?.insetSquish);
-      expect(themeLight.inputDecorationTheme.prefixIconConstraints, const BoxConstraints(minWidth: 32, minHeight: 32));
-      expect(themeLight.inputDecorationTheme.suffixIconConstraints, const BoxConstraints(minWidth: 32, minHeight: 32));
+      expect(themeLight.inputDecorationTheme.constraints, const BoxConstraints(minHeight: 30.0));
+      expect(themeLight.inputDecorationTheme.prefixIconConstraints, const BoxConstraints(minWidth: 30, minHeight: 30));
+      expect(themeLight.inputDecorationTheme.suffixIconConstraints, const BoxConstraints(minWidth: 30, minHeight: 30));
 
-      final themeDark = trading.toThemeData(isDark: true);
+      final themeDark = emerald.toThemeData(isDark: true);
       expect(themeDark.brightness, Brightness.dark);
-      expect(themeDark.extension<AppRadiusTheme>()?.md.value, 4.0);
-      expect(themeDark.extension<AppSpacingTheme>()?.gapMd, 8.0);
+      expect(themeDark.inputDecorationTheme.constraints, const BoxConstraints(minHeight: 30.0));
+    });
+
+    test('Custom compact preset with baseSpacing 8 enforces 30px minHeight and healthy padding', () {
+      const customCompact = ThemePreset(
+        id: 'custom_compact',
+        name: 'Custom Compact',
+        lightAnchor: Color(0xFFFCFDFD),
+        darkAnchor: Color(0xFF1A1A1A),
+        primaryColor: Color(0xFF1D65AB),
+        density: DensityPreset.compact,
+        baseSpacing: 8,
+      );
+
+      final theme = customCompact.toThemeData(isDark: false);
+      expect(theme.inputDecorationTheme.isDense, true);
+      expect(theme.inputDecorationTheme.constraints, const BoxConstraints(minHeight: 30.0));
+      expect(theme.inputDecorationTheme.prefixIconConstraints, const BoxConstraints(minWidth: 30, minHeight: 30));
+      expect(theme.inputDecorationTheme.suffixIconConstraints, const BoxConstraints(minWidth: 30, minHeight: 30));
+      // With baseSpacing: 8, squishV is clamped to minimum 6.0
+      expect(theme.extension<AppSpacingTheme>()?.insetSquish.top, 6.0);
     });
 
     test('AppThemeController supports initialCustomPresets and addCustomPreset', () {

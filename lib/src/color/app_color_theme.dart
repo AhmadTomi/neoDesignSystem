@@ -1283,6 +1283,7 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
         filled: true,
         fillColor: textFieldFill,
         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        constraints: const BoxConstraints(minHeight: 38.0),
         prefixIconConstraints: const BoxConstraints(minWidth: 38, minHeight: 38),
         suffixIconConstraints: const BoxConstraints(minWidth: 38, minHeight: 38),
         enabledBorder: OutlineInputBorder(

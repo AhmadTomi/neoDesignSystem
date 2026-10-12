@@ -275,13 +275,16 @@ class ThemePreset {
         filled: true,
         fillColor: colorTheme.textFieldFill,
         contentPadding: spacingTheme.insetSquish,
+        constraints: BoxConstraints(
+          minHeight: density == DensityPreset.compact ? 30.0 : 38.0,
+        ),
         prefixIconConstraints: BoxConstraints(
-          minWidth: density == DensityPreset.compact ? 32 : 38,
-          minHeight: density == DensityPreset.compact ? 32 : 38,
+          minWidth: density == DensityPreset.compact ? 30.0 : 38.0,
+          minHeight: density == DensityPreset.compact ? 30.0 : 38.0,
         ),
         suffixIconConstraints: BoxConstraints(
-          minWidth: density == DensityPreset.compact ? 32 : 38,
-          minHeight: density == DensityPreset.compact ? 32 : 38,
+          minWidth: density == DensityPreset.compact ? 30.0 : 38.0,
+          minHeight: density == DensityPreset.compact ? 30.0 : 38.0,
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: radiusTheme.md.all,
@@ -483,49 +486,12 @@ abstract final class BuiltInPresets {
     isBuiltIn: true,
   );
 
-  /// Neo Trading: Specialized trading interface with high contrast and compact metrics.
-  static const trading = ThemePreset(
-    id: 'neo_trading',
-    name: 'Neo Trading',
-    description: 'Specialized trading interface with high contrast and compact metrics.',
-    lightAnchor: Color(0xFFFCFDFD),
-    darkAnchor: Color(0xFF1A1A1A),
-    primaryColor: Color(0xFF1D65AB),
-    darkPrimaryColor: Color(0xFF1D65AB),
-    errorColor: Color(0xFFFE3E3F),
-    warningColor: Color(0xFFF2960E),
-    infoColor: Color(0xff417BD2),
-    successColor: Color(0xFF07B667),
-    darkSuccessColor: Color(0xFF07B667),
-    lightSuccessColor: Color(0xFF417BD2),
-    whiteColor: Color(0xFFC5C5C7),
-    shape: ShapePreset.rounded,
-    density: DensityPreset.compact,
-    fontFamily: 'Inter',
-    baseFontSize: 13,
-    baseRadius: 4,
-    baseSpacing: 8,
-    isBuiltIn: true,
-  );
-
-  /// Alias for [trading].
-  static const neoTrading = trading;
-
   /// All built-in presets list.
   static const List<ThemePreset> all = [
     slate,
     emerald,
     nordic,
     amber,
-    trading,
   ];
-}
-
-/// Backwards compatibility and convenient access for Neo Trading preset.
-class NeoTradingTheme {
-  static const ThemePreset preset = BuiltInPresets.trading;
-
-  /// Backwards compatibility alias for [preset].
-  static ThemePreset get theme => preset;
 }
 

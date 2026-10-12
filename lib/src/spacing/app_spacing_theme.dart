@@ -67,7 +67,8 @@ class AppSpacingTheme extends ThemeExtension<AppSpacingTheme> {
     final gapLg = _snapToHalf(baseSpacing * (isCompact ? (16.0 / 10.0) : (24.0 / 16.0)));
 
     final squishH = _snapToHalf(baseSpacing * (isCompact ? (8.0 / 10.0) : (14.0 / 16.0)));
-    final squishV = _snapToHalf(baseSpacing * (isCompact ? (7.0 / 10.0) : (10.0 / 16.0)));
+    final rawSquishV = baseSpacing * (isCompact ? (7.0 / 10.0) : (10.0 / 16.0));
+    final squishV = _snapToHalf(isCompact ? rawSquishV.clamp(6.0, double.infinity) : rawSquishV);
     final padSm = _snapToHalf(baseSpacing * (isCompact ? (4.0 / 10.0) : (8.0 / 16.0)));
     final padMd = _snapToHalf(baseSpacing);
     final padLg = _snapToHalf(baseSpacing * (isCompact ? (16.0 / 10.0) : (24.0 / 16.0)));
