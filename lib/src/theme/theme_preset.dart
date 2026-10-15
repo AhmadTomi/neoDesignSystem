@@ -115,6 +115,9 @@ class ThemePreset {
   /// Indicates if this is a built-in system preset.
   final bool isBuiltIn;
 
+  /// Whether high-contrast mode is enabled (shifts OKLCH formulas to WCAG AAA standards).
+  final bool highContrast;
+
   const ThemePreset({
     required this.id,
     required this.name,
@@ -153,16 +156,19 @@ class ThemePreset {
     this.typography,
     this.themeModifier,
     this.isBuiltIn = false,
+    this.highContrast = false,
   });
 
   /// Builds a complete Flutter [ThemeData] with all token extensions registered.
-  ThemeData toThemeData({required bool isDark}) {
+  ThemeData toThemeData({required bool isDark, bool? highContrast}) {
+    final effectiveHighContrast = highContrast ?? this.highContrast;
     final anchor = isDark ? darkAnchor : lightAnchor;
 
     // 1. Generate AppColorTheme
     final colorTheme = AppColorTheme.fromColor(
       anchorColor: anchor,
       isDark: isDark,
+      highContrast: effectiveHighContrast,
       primaryColor: primaryColor,
       darkPrimaryColor: darkPrimaryColor,
       lightPrimaryColor: lightPrimaryColor,
@@ -251,14 +257,20 @@ class ThemePreset {
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: radiusTheme.lg.all,
-          side: BorderSide(color: colorTheme.containerBorder),
+          side: BorderSide(
+            color: colorTheme.containerBorder,
+            width: effectiveHighContrast ? 1.5 : 1.0,
+          ),
         ),
       ),
       dialogTheme: DialogThemeData(
         backgroundColor: colorTheme.container4,
         shape: RoundedRectangleBorder(
           borderRadius: radiusTheme.xl.all,
-          side: BorderSide(color: colorTheme.containerBorder),
+          side: BorderSide(
+            color: colorTheme.containerBorder,
+            width: effectiveHighContrast ? 1.5 : 1.0,
+          ),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -288,23 +300,38 @@ class ThemePreset {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: radiusTheme.md.all,
-          borderSide: BorderSide(color: colorTheme.textFieldBorder),
+          borderSide: BorderSide(
+            color: colorTheme.textFieldBorder,
+            width: effectiveHighContrast ? 1.5 : 1.0,
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: radiusTheme.md.all,
-          borderSide: BorderSide(color: colorTheme.primary, width: 1.8),
+          borderSide: BorderSide(
+            color: colorTheme.primary,
+            width: effectiveHighContrast ? 2.2 : 1.8,
+          ),
         ),
         disabledBorder: OutlineInputBorder(
           borderRadius: radiusTheme.md.all,
-          borderSide: BorderSide(color: colorTheme.textFieldDisabledBorder),
+          borderSide: BorderSide(
+            color: colorTheme.textFieldDisabledBorder,
+            width: effectiveHighContrast ? 1.5 : 1.0,
+          ),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: radiusTheme.md.all,
-          borderSide: BorderSide(color: colorTheme.error, width: 1.2),
+          borderSide: BorderSide(
+            color: colorTheme.error,
+            width: effectiveHighContrast ? 1.5 : 1.2,
+          ),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: radiusTheme.md.all,
-          borderSide: BorderSide(color: colorTheme.error, width: 1.8),
+          borderSide: BorderSide(
+            color: colorTheme.error,
+            width: effectiveHighContrast ? 2.2 : 1.8,
+          ),
         ),
         errorStyle: typographyTheme.labelSm.copyWith(
           color: colorTheme.error,
@@ -320,7 +347,7 @@ class ThemePreset {
       ),
       dividerTheme: DividerThemeData(
         color: colorTheme.dividerLine,
-        thickness: 1.0,
+        thickness: effectiveHighContrast ? 1.5 : 1.0,
         space: 1.0,
       ),
     );
@@ -389,6 +416,7 @@ class ThemePreset {
     AppTypography? typography,
     ThemeModifier? themeModifier,
     bool? isBuiltIn,
+    bool? highContrast,
   }) {
     return ThemePreset(
       id: id ?? this.id,
@@ -428,6 +456,7 @@ class ThemePreset {
       typography: typography ?? this.typography,
       themeModifier: themeModifier ?? this.themeModifier,
       isBuiltIn: isBuiltIn ?? this.isBuiltIn,
+      highContrast: highContrast ?? this.highContrast,
     );
   }
 }

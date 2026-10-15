@@ -77,6 +77,7 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
   final double chroma;
   final double hue;
   final bool isDark;
+  final bool highContrast;
 
   // Layer specifications for the inspector
   final List<LayerSpec> specs;
@@ -111,18 +112,19 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
     this.chroma = 0.0,
     this.hue = 0.0,
     this.isDark = false,
+    this.highContrast = false,
     this.specs = const [],
   });
 
   // --- GETTERS WARNA REDUP SEMANTIK (Single Source of Truth: textMain) ---
-  /// Redup Sedang (72% alpha) - Subtitle, deskripsi, caption penting
-  Color get textSecondary => textMain.withValues(alpha: 0.72);
+  /// Redup Sedang - Subtitle, deskripsi, caption penting (88% in high contrast, 72% standard)
+  Color get textSecondary => textMain.withValues(alpha: highContrast ? 0.88 : 0.72);
 
-  /// Redup Kuat / Muted (50% alpha) - Placeholder, footnote, jam/tanggal pudar
-  Color get textMuted => textMain.withValues(alpha: 0.50);
+  /// Redup Kuat / Muted - Placeholder, footnote, jam/tanggal pudar (72% in high contrast, 50% standard)
+  Color get textMuted => textMain.withValues(alpha: highContrast ? 0.72 : 0.50);
 
-  /// Garis redup samar (8% alpha) - Hairline border, disabled outline
-  Color get subtleBorder => textMain.withValues(alpha: 0.08);
+  /// Garis redup samar - Hairline border, disabled outline (25% in high contrast, 8% standard)
+  Color get subtleBorder => textMain.withValues(alpha: highContrast ? 0.25 : 0.08);
 
   /// Convenient semantic alias for [containerBorder].
   Color get border => containerBorder;
@@ -131,6 +133,7 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
   factory AppColorTheme.fromColor({
     required Color anchorColor,
     required bool isDark,
+    bool highContrast = false,
     Color? primaryColor,
     Color? darkPrimaryColor,
     Color? lightPrimaryColor,
@@ -155,6 +158,7 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
     Color? whiteColor,
     double? c2Delta,
     double? troughDelta,
+    double? c4Delta,
   }) {
     final oklch = OklchColor.fromColor(anchorColor);
     return AppColorTheme.fromAnchor(
@@ -162,6 +166,7 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
       c: oklch.c.clamp(0.0, 0.15),
       h: oklch.h,
       isDark: isDark,
+      highContrast: highContrast,
       primaryColor: primaryColor,
       darkPrimaryColor: darkPrimaryColor,
       lightPrimaryColor: lightPrimaryColor,
@@ -186,6 +191,7 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
       whiteColor: whiteColor,
       c2Delta: c2Delta,
       troughDelta: troughDelta,
+      c4Delta: c4Delta,
     );
   }
 
@@ -195,6 +201,7 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
     required double c,
     required double h,
     required bool isDark,
+    bool highContrast = false,
     Color? primaryColor,
     Color? darkPrimaryColor,
     Color? lightPrimaryColor,
@@ -219,9 +226,11 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
     Color? whiteColor,
     double? c2Delta,
     double? troughDelta,
+    double? c4Delta,
   }) {
     final effectiveC2Delta = c2Delta ?? (isDark ? 0.022 : 0.018);
     final effectiveTroughDelta = troughDelta ?? (isDark ? 0.018 : 0.030);
+    final effectiveC4Delta = c4Delta ?? (isDark ? 0.028 : 0.008);
 
     final effectivePrimary = primaryColor ?? const Color(0xFF2563EB);
     final oklchP = OklchColor.fromColor(effectivePrimary);
@@ -242,11 +251,11 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
 
     if (!isDark) {
       // ----------------- Light Mode Formulas -----------------
-      final l1 = (anchorL - effectiveC2Delta * 2.0).clamp(0.0, 1.0);
+      final l1 = (anchorL - effectiveC2Delta * (highContrast ? 3.5 : 2.0)).clamp(0.0, 1.0);
       final c1 = c * 0.70;
       final oklch1 = OklchColor(l1, c1, h);
 
-      final l2 = (anchorL - effectiveC2Delta).clamp(0.0, 1.0);
+      final l2 = (anchorL - effectiveC2Delta * (highContrast ? 1.5 : 1.0)).clamp(0.0, 1.0);
       final c2 = c * 0.90;
       final oklch2 = OklchColor(l2, c2, h);
 
@@ -258,15 +267,16 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
       final cField = c * 1.2;
       final oklchField = OklchColor(lField, cField, h);
 
-      final l4 = (anchorL + 0.010).clamp(0.0, 0.985);
+      final l4 = (anchorL + effectiveC4Delta * (highContrast ? 1.5 : 1.0)).clamp(0.0, 0.985);
       final c4 = c * 0.85;
       final oklch4 = OklchColor(l4, c4, h);
 
-      final lText = 0.20;
-      final cText = 0.03;
+      // Deep, near-pure black in high contrast for maximum contrast ratio (>18:1)
+      final lText = highContrast ? 0.02 : 0.20;
+      final cText = highContrast ? 0.00 : 0.03;
       final oklchText = OklchColor(lText, cText, h);
 
-      final lTbf = (anchorL - 0.055).clamp(0.0, 1.0);
+      final lTbf = (anchorL - (highContrast ? 0.09 : 0.055)).clamp(0.0, 1.0);
       final cTbf = c > 0.001 ? math.max(c * 1.4, 0.018) : 0.0;
       final oklchTbf = OklchColor(lTbf, cTbf, h);
       final oklchTbt = oklchText;
@@ -284,6 +294,13 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
         cCb = oklchExact.c;
         hexCb = oklchExact.hexCode;
         formulaCb = 'Exact border override ($hexCb)';
+      } else if (highContrast) {
+        lCb = 0.38;
+        cCb = c * 0.3;
+        final oklchCb = OklchColor(lCb, cCb, h);
+        colContainerBorder = oklchCb.toColor();
+        hexCb = oklchCb.hexCode;
+        formulaCb = 'High contrast border (L: 0.38)';
       } else {
         lCb = (anchorL - 0.07).clamp(0.0, 1.0);
         cCb = c * 0.6;
@@ -314,6 +331,13 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
         colDivider = oklchDiv.toColor();
         hexDiv = oklchDiv.hexCode;
         formulaDiv = 'Derived from border (L + 0.04)';
+      } else if (highContrast) {
+        lDivider = 0.52;
+        cDivider = c * 0.3;
+        final oklchDivider = OklchColor(lDivider, cDivider, h);
+        colDivider = oklchDivider.toColor();
+        hexDiv = oklchDivider.hexCode;
+        formulaDiv = 'High contrast divider (L: 0.52)';
       } else {
         lDivider = (anchorL - 0.05).clamp(0.0, 1.0);
         cDivider = c * 0.5;
@@ -323,8 +347,8 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
         formulaDiv = 'anchorL - 0.05 (c * 0.5)';
       }
 
-      final lTfBorder = (anchorL - 0.10).clamp(0.0, 1.0);
-      const cTfBorder = 0.02;
+      final lTfBorder = highContrast ? 0.28 : (anchorL - 0.10).clamp(0.0, 1.0);
+      final cTfBorder = highContrast ? 0.01 : 0.02;
       final oklchTfBorder = OklchColor(lTfBorder, cTfBorder, h);
 
       final Color colPrimary;
@@ -342,7 +366,7 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
         formulaPri = 'Exact light override ($hexPri)';
         colOnPrimary = lPri > 0.62 ? const Color(0xFF0F172A) : Colors.white;
       } else {
-        lPri = oklchP.l.clamp(0.35, 0.65);
+        lPri = highContrast ? oklchP.l.clamp(0.28, 0.46) : oklchP.l.clamp(0.35, 0.65);
         cPri = oklchP.c;
         final oklchPri = OklchColor(lPri, cPri, oklchP.h);
         colPrimary = oklchPri.toColor();
@@ -366,7 +390,7 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
         formulaSuc = 'Exact light override ($hexSuc)';
         colOnSuccess = lSuc > 0.62 ? const Color(0xFF0F172A) : Colors.white;
       } else {
-        lSuc = oklchSuc.l.clamp(0.35, 0.65);
+        lSuc = highContrast ? oklchSuc.l.clamp(0.28, 0.46) : oklchSuc.l.clamp(0.35, 0.65);
         cSuc = oklchSuc.c;
         final oklchSucDerived = OklchColor(lSuc, cSuc, oklchSuc.h);
         colSuccess = oklchSucDerived.toColor();
@@ -390,7 +414,7 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
         formulaWar = 'Exact light override ($hexWar)';
         colOnWarning = lWar > 0.62 ? const Color(0xFF0F172A) : Colors.white;
       } else {
-        lWar = oklchWar.l.clamp(0.40, 0.72);
+        lWar = highContrast ? oklchWar.l.clamp(0.35, 0.52) : oklchWar.l.clamp(0.40, 0.72);
         cWar = oklchWar.c;
         final oklchWarDerived = OklchColor(lWar, cWar, oklchWar.h);
         colWarning = oklchWarDerived.toColor();
@@ -414,7 +438,7 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
         formulaErr = 'Exact light override ($hexErr)';
         colOnError = lErr > 0.62 ? const Color(0xFF0F172A) : Colors.white;
       } else {
-        lErr = oklchErr.l.clamp(0.35, 0.65);
+        lErr = highContrast ? oklchErr.l.clamp(0.28, 0.46) : oklchErr.l.clamp(0.35, 0.65);
         cErr = oklchErr.c;
         final oklchErrDerived = OklchColor(lErr, cErr, oklchErr.h);
         colError = oklchErrDerived.toColor();
@@ -438,7 +462,7 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
         formulaInf = 'Exact light override ($hexInf)';
         colOnInfo = lInf > 0.62 ? const Color(0xFF0F172A) : Colors.white;
       } else {
-        lInf = oklchInf.l.clamp(0.35, 0.65);
+        lInf = highContrast ? oklchInf.l.clamp(0.28, 0.46) : oklchInf.l.clamp(0.35, 0.65);
         cInf = oklchInf.c;
         final oklchInfDerived = OklchColor(lInf, cInf, oklchInf.h);
         colInfo = oklchInfDerived.toColor();
@@ -457,8 +481,8 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
       final colTbt = oklchTbt.toColor();
       final colTfBorder = oklchTfBorder.toColor();
       final colTfDisabledFill = col3;
-      final colTfDisabledBorder = colText.withValues(alpha: 0.08);
-      final colTextDisabled = colText.withValues(alpha: 0.38);
+      final colTfDisabledBorder = colText.withValues(alpha: highContrast ? 0.20 : 0.08);
+      final colTextDisabled = colText.withValues(alpha: highContrast ? 0.50 : 0.38);
 
       final specs = [
         LayerSpec(
@@ -549,7 +573,7 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
           c: c4,
           color: col4,
           hex: oklch4.hexCode,
-          formula: 'anchorL + 0.010 (c * 0.85)',
+          formula: 'anchorL + ${(effectiveC4Delta * (highContrast ? 1.5 : 1.0)).toStringAsFixed(3)} (c * 0.85)',
         ),
         LayerSpec(
           id: 'TBF',
@@ -673,15 +697,18 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
         chroma: c,
         hue: h,
         isDark: false,
+        highContrast: highContrast,
         specs: specs,
       );
     } else {
       // ----------------- Dark Mode Formulas -----------------
-      final l1 = (anchorL - effectiveC2Delta * 2.5).clamp(0.0, 1.0);
+      final l1 = highContrast
+          ? math.max(0.02, anchorL - 0.12)
+          : (anchorL - effectiveC2Delta * 2.5).clamp(0.0, 1.0);
       final c1 = c * 0.82;
       final oklch1 = OklchColor(l1, c1, h);
 
-      final l2 = (anchorL - effectiveC2Delta).clamp(0.0, 1.0);
+      final l2 = (anchorL - effectiveC2Delta * (highContrast ? 1.5 : 1.0)).clamp(0.0, 1.0);
       final c2 = c * 0.94;
       final oklch2 = OklchColor(l2, c2, h);
 
@@ -693,15 +720,16 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
       final cField = c * 0.88;
       final oklchField = OklchColor(lField, cField, h);
 
-      final l4 = (anchorL + 0.07).clamp(0.0, 1.0);
+      final l4 = (anchorL + effectiveC4Delta * (highContrast ? 1.6 : 1.0)).clamp(0.0, 1.0);
       final c4 = c * 1.0;
       final oklch4 = OklchColor(l4, c4, h);
 
-      final lText = 0.93;
-      final cText = 0.015;
+      // Pure white in high contrast for maximum contrast ratio (21:1 on pure black)
+      final lText = highContrast ? 1.00 : 0.93;
+      final cText = highContrast ? 0.00 : 0.015;
       final oklchText = whiteColor != null ? OklchColor.fromColor(whiteColor) : OklchColor(lText, cText, h);
 
-      final lTbf = (l4 + 0.065).clamp(0.0, 1.0);
+      final lTbf = (l4 + (highContrast ? 0.09 : 0.065)).clamp(0.0, 1.0);
       final cTbf = c > 0.001 ? math.max(c * 1.3, 0.025) : 0.0;
       final oklchTbf = OklchColor(lTbf, cTbf, h);
       final oklchTbt = oklchText;
@@ -727,6 +755,13 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
         colContainerBorder = oklchCb.toColor();
         hexCb = oklchCb.hexCode;
         formulaCb = 'Border adapted in OKLCH ($hexCb)';
+      } else if (highContrast) {
+        lCb = 0.65;
+        cCb = c * 0.4;
+        final oklchCb = OklchColor(lCb, cCb, h);
+        colContainerBorder = oklchCb.toColor();
+        hexCb = oklchCb.hexCode;
+        formulaCb = 'High contrast dark border (L: 0.65)';
       } else {
         lCb = (anchorL + 0.06).clamp(0.0, 1.0);
         cCb = c * 0.6;
@@ -765,6 +800,13 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
         colDivider = oklchDiv.toColor();
         hexDiv = oklchDiv.hexCode;
         formulaDiv = 'Derived from border (L - 0.04)';
+      } else if (highContrast) {
+        lDivider = 0.48;
+        cDivider = c * 0.3;
+        final oklchDivider = OklchColor(lDivider, cDivider, h);
+        colDivider = oklchDivider.toColor();
+        hexDiv = oklchDivider.hexCode;
+        formulaDiv = 'High contrast dark divider (L: 0.48)';
       } else {
         lDivider = (anchorL + 0.05).clamp(0.0, 1.0);
         cDivider = c * 0.5;
@@ -774,7 +816,7 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
         formulaDiv = 'anchorL + 0.05 (c * 0.5)';
       }
 
-      final lTfBorder = (anchorL + 0.08).clamp(0.0, 1.0);
+      final lTfBorder = highContrast ? 0.72 : (anchorL + 0.08).clamp(0.0, 1.0);
       const cTfBorder = 0.02;
       final oklchTfBorder = OklchColor(lTfBorder, cTfBorder, h);
 
@@ -793,7 +835,9 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
         formulaPri = 'Exact dark override ($hexPri)';
         colOnPrimary = lPri > 0.62 ? const Color(0xFF090D16) : Colors.white;
       } else {
-        lPri = (oklchP.l < 0.55 ? (oklchP.l + 0.22) : oklchP.l).clamp(0.55, 0.78);
+        lPri = highContrast
+            ? (oklchP.l < 0.65 ? (oklchP.l + 0.28) : oklchP.l).clamp(0.68, 0.85)
+            : (oklchP.l < 0.55 ? (oklchP.l + 0.22) : oklchP.l).clamp(0.55, 0.78);
         cPri = oklchP.c;
         final oklchPri = OklchColor(lPri, cPri, oklchP.h);
         colPrimary = oklchPri.toColor();
@@ -817,7 +861,9 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
         formulaSuc = 'Exact dark override ($hexSuc)';
         colOnSuccess = lSuc > 0.62 ? const Color(0xFF090D16) : Colors.white;
       } else {
-        lSuc = (oklchSuc.l < 0.55 ? (oklchSuc.l + 0.22) : oklchSuc.l).clamp(0.55, 0.78);
+        lSuc = highContrast
+            ? (oklchSuc.l < 0.65 ? (oklchSuc.l + 0.28) : oklchSuc.l).clamp(0.68, 0.85)
+            : (oklchSuc.l < 0.55 ? (oklchSuc.l + 0.22) : oklchSuc.l).clamp(0.55, 0.78);
         cSuc = oklchSuc.c;
         final oklchSucDerived = OklchColor(lSuc, cSuc, oklchSuc.h);
         colSuccess = oklchSucDerived.toColor();
@@ -841,7 +887,9 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
         formulaWar = 'Exact dark override ($hexWar)';
         colOnWarning = lWar > 0.62 ? const Color(0xFF090D16) : Colors.white;
       } else {
-        lWar = (oklchWar.l < 0.60 ? (oklchWar.l + 0.18) : oklchWar.l).clamp(0.60, 0.82);
+        lWar = highContrast
+            ? (oklchWar.l < 0.70 ? (oklchWar.l + 0.22) : oklchWar.l).clamp(0.72, 0.88)
+            : (oklchWar.l < 0.60 ? (oklchWar.l + 0.18) : oklchWar.l).clamp(0.60, 0.82);
         cWar = oklchWar.c;
         final oklchWarDerived = OklchColor(lWar, cWar, oklchWar.h);
         colWarning = oklchWarDerived.toColor();
@@ -865,7 +913,9 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
         formulaErr = 'Exact dark override ($hexErr)';
         colOnError = lErr > 0.62 ? const Color(0xFF090D16) : Colors.white;
       } else {
-        lErr = (oklchErr.l < 0.55 ? (oklchErr.l + 0.22) : oklchErr.l).clamp(0.55, 0.78);
+        lErr = highContrast
+            ? (oklchErr.l < 0.65 ? (oklchErr.l + 0.28) : oklchErr.l).clamp(0.68, 0.85)
+            : (oklchErr.l < 0.55 ? (oklchErr.l + 0.22) : oklchErr.l).clamp(0.55, 0.78);
         cErr = oklchErr.c;
         final oklchErrDerived = OklchColor(lErr, cErr, oklchErr.h);
         colError = oklchErrDerived.toColor();
@@ -889,7 +939,9 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
         formulaInf = 'Exact dark override ($hexInf)';
         colOnInfo = lInf > 0.62 ? const Color(0xFF090D16) : Colors.white;
       } else {
-        lInf = (oklchInf.l < 0.55 ? (oklchInf.l + 0.22) : oklchInf.l).clamp(0.55, 0.78);
+        lInf = highContrast
+            ? (oklchInf.l < 0.65 ? (oklchInf.l + 0.28) : oklchInf.l).clamp(0.68, 0.85)
+            : (oklchInf.l < 0.55 ? (oklchInf.l + 0.22) : oklchInf.l).clamp(0.55, 0.78);
         cInf = oklchInf.c;
         final oklchInfDerived = OklchColor(lInf, cInf, oklchInf.h);
         colInfo = oklchInfDerived.toColor();
@@ -908,8 +960,8 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
       final colTbt = oklchTbt.toColor();
       final colTfBorder = oklchTfBorder.toColor();
       final colTfDisabledFill = col3;
-      final colTfDisabledBorder = colText.withValues(alpha: 0.08);
-      final colTextDisabled = colText.withValues(alpha: 0.38);
+      final colTfDisabledBorder = colText.withValues(alpha: highContrast ? 0.20 : 0.08);
+      final colTextDisabled = colText.withValues(alpha: highContrast ? 0.50 : 0.38);
 
       final specs = [
         LayerSpec(
@@ -1000,7 +1052,7 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
           c: c4,
           color: col4,
           hex: oklch4.hexCode,
-          formula: 'anchorL + 0.07 (c * 1.0)',
+          formula: 'anchorL + ${(effectiveC4Delta * (highContrast ? 1.6 : 1.0)).toStringAsFixed(3)} (c * 1.0)',
         ),
         LayerSpec(
           id: 'TBF',
@@ -1124,6 +1176,7 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
         chroma: c,
         hue: h,
         isDark: true,
+        highContrast: highContrast,
         specs: specs,
       );
     }
@@ -1160,6 +1213,7 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
     double? chroma,
     double? hue,
     bool? isDark,
+    bool? highContrast,
     List<LayerSpec>? specs,
   }) {
     return AppColorTheme(
@@ -1192,6 +1246,7 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
       chroma: chroma ?? this.chroma,
       hue: hue ?? this.hue,
       isDark: isDark ?? this.isDark,
+      highContrast: highContrast ?? this.highContrast,
       specs: specs ?? this.specs,
     );
   }
@@ -1230,6 +1285,7 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
       chroma: chroma + (other.chroma - chroma) * t,
       hue: hue + (other.hue - hue) * t,
       isDark: t < 0.5 ? isDark : other.isDark,
+      highContrast: t < 0.5 ? highContrast : other.highContrast,
       specs: t < 0.5 ? specs : other.specs,
     );
   }

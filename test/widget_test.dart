@@ -107,8 +107,8 @@ void main() {
       // 5. Disabled Text/Icon: textMain alpha 0.38
       expect((palette.textDisabled.a * 255).round(), closeTo(255 * 0.38, 2));
 
-      // C4 (Dialog & Menu Surface): anchorL + 0.010, chroma: c * 0.85
-      expect(specC4.l, closeTo(0.92 + 0.010, 0.001));
+      // C4 (Dialog & Menu Surface): anchorL + 0.008, chroma: c * 0.85
+      expect(specC4.l, closeTo(0.92 + 0.008, 0.001));
       expect(specC4.c, closeTo(0.05 * 0.85, 0.001));
 
       // Tonal Button Fill (Light): anchorL - 0.055
@@ -196,12 +196,12 @@ void main() {
       // 5. Disabled Text/Icon: textMain alpha 0.38
       expect((palette.textDisabled.a * 255).round(), closeTo(255 * 0.38, 2));
 
-      // C4 (Dialog & Menu Surface): anchorL + 0.07, chroma: c * 1.0
-      expect(specC4.l, closeTo(0.33, 0.001));
+      // C4 (Dialog & Menu Surface): anchorL + 0.028, chroma: c * 1.0
+      expect(specC4.l, closeTo(0.26 + 0.028, 0.001));
       expect(specC4.c, closeTo(0.05 * 1.0, 0.001));
 
-      // Tonal Button Fill (Dark): C4 + 0.065 = 0.33 + 0.065 = 0.395
-      expect(specTbf.l, closeTo(0.33 + 0.065, 0.001));
+      // Tonal Button Fill (Dark): C4 + 0.065 = 0.288 + 0.065 = 0.353
+      expect(specTbf.l, closeTo(0.26 + 0.028 + 0.065, 0.001));
       expect(palette.tonalButtonFill, isNotNull);
 
       // Tonal Button Text (Dark): textMain (L = 0.93)
@@ -964,6 +964,121 @@ void main() {
 
       expect(contextColorWhite, equals(customSnow));
       expect(contextWhiteDirect, equals(customSnow));
+    });
+
+    test('High Contrast Mode shifts OKLCH calculations to WCAG AAA standards for Light and Dark modes', () {
+      // 1. Light Mode Standard vs High Contrast
+      final standardLight = AppColorTheme.fromAnchor(
+        anchorL: 0.970,
+        c: 0.003,
+        h: 264.5,
+        isDark: false,
+        highContrast: false,
+      );
+      final highContrastLight = AppColorTheme.fromAnchor(
+        anchorL: 0.970,
+        c: 0.003,
+        h: 264.5,
+        isDark: false,
+        highContrast: true,
+      );
+
+      // In high contrast light mode, textMain is near-pure black (L = 0.02 vs 0.20)
+      final specTextStdLight = standardLight.specs.firstWhere((s) => s.id == 'TBT');
+      final specTextHcLight = highContrastLight.specs.firstWhere((s) => s.id == 'TBT');
+      expect(specTextStdLight.l, closeTo(0.20, 0.001));
+      expect(specTextHcLight.l, closeTo(0.02, 0.001));
+
+      // In high contrast light mode, containerBorder is dark and prominent (L = 0.38)
+      final specBorderHcLight = highContrastLight.specs.firstWhere((s) => s.id == 'CBD');
+      expect(specBorderHcLight.l, closeTo(0.38, 0.001));
+
+      // In high contrast light mode, textFieldBorder is solid (L = 0.28)
+      final specTfbHcLight = highContrastLight.specs.firstWhere((s) => s.id == 'TFB');
+      expect(specTfbHcLight.l, closeTo(0.28, 0.001));
+
+      // In high contrast light mode, dividerLine is distinct (L = 0.52)
+      final specDivHcLight = highContrastLight.specs.firstWhere((s) => s.id == 'DIV');
+      expect(specDivHcLight.l, closeTo(0.52, 0.001));
+
+      // Text alpha hierarchy is elevated for readability
+      expect((standardLight.textSecondary.a * 255).round(), closeTo(255 * 0.72, 2));
+      expect((highContrastLight.textSecondary.a * 255).round(), closeTo(255 * 0.88, 2));
+      expect((standardLight.textMuted.a * 255).round(), closeTo(255 * 0.50, 2));
+      expect((highContrastLight.textMuted.a * 255).round(), closeTo(255 * 0.72, 2));
+
+      // 2. Dark Mode Standard vs High Contrast
+      final standardDark = AppColorTheme.fromAnchor(
+        anchorL: 0.173,
+        c: 0.0,
+        h: 0.0,
+        isDark: true,
+        highContrast: false,
+      );
+      final highContrastDark = AppColorTheme.fromAnchor(
+        anchorL: 0.173,
+        c: 0.0,
+        h: 0.0,
+        isDark: true,
+        highContrast: true,
+      );
+
+      // In high contrast dark mode, textMain is pure white (L = 1.00 vs 0.93)
+      final specTextStdDark = standardDark.specs.firstWhere((s) => s.id == 'TBT');
+      final specTextHcDark = highContrastDark.specs.firstWhere((s) => s.id == 'TBT');
+      expect(specTextStdDark.l, closeTo(0.93, 0.001));
+      expect(specTextHcDark.l, closeTo(1.00, 0.001));
+
+      // In high contrast dark mode, container1 canvas drops to deep black
+      final specC1HcDark = highContrastDark.specs.firstWhere((s) => s.id == 'C1');
+      expect(specC1HcDark.l, closeTo(0.173 - 0.12, 0.001));
+
+      // In high contrast dark mode, containerBorder is luminous (L = 0.65)
+      final specBorderHcDark = highContrastDark.specs.firstWhere((s) => s.id == 'CBD');
+      expect(specBorderHcDark.l, closeTo(0.65, 0.001));
+
+      // In high contrast dark mode, textFieldBorder is prominent (L = 0.72)
+      final specTfbHcDark = highContrastDark.specs.firstWhere((s) => s.id == 'TFB');
+      expect(specTfbHcDark.l, closeTo(0.72, 0.001));
+
+      // Dark mode text alpha hierarchy
+      expect((highContrastDark.textSecondary.a * 255).round(), closeTo(255 * 0.88, 2));
+      expect((highContrastDark.textMuted.a * 255).round(), closeTo(255 * 0.72, 2));
+
+      // 3. ThemePreset component theme border side width boost
+      final presetNormal = BuiltInPresets.slate;
+      final themeNormal = presetNormal.toThemeData(isDark: false);
+      expect((themeNormal.cardTheme.shape as RoundedRectangleBorder).side.width, equals(1.0));
+
+      final presetHc = BuiltInPresets.slate.copyWith(highContrast: true);
+      final themeHc = presetHc.toThemeData(isDark: false);
+      expect((themeHc.cardTheme.shape as RoundedRectangleBorder).side.width, equals(1.5));
+      expect(themeHc.inputDecorationTheme.enabledBorder?.borderSide.width, equals(1.5));
+      expect(themeHc.inputDecorationTheme.focusedBorder?.borderSide.width, equals(2.2));
+
+      // Dynamic highContrast parameter override in toThemeData
+      final themeDynamicHc = presetNormal.toThemeData(isDark: false, highContrast: true);
+      expect((themeDynamicHc.cardTheme.shape as RoundedRectangleBorder).side.width, equals(1.5));
+
+      // 4. AppThemeController state switching
+      final controller = AppThemeController(initialPreset: presetNormal);
+      expect(controller.isHighContrast, isFalse);
+
+      controller.setHighContrast(true);
+      expect(controller.isHighContrast, isTrue);
+      expect(controller.currentPreset.highContrast, isTrue);
+
+      controller.toggleHighContrast();
+      expect(controller.isHighContrast, isFalse);
+
+      // 5. ThemeConfig JSON serialization and deserialization
+      final config = ThemeConfig.fromPreset(presetHc);
+      expect(config.highContrast, isTrue);
+      final json = config.toJson();
+      expect(json['highContrast'], isTrue);
+
+      final restoredPreset = ThemeConfig.fromJson(json).toPreset();
+      expect(restoredPreset.highContrast, isTrue);
     });
   });
 }

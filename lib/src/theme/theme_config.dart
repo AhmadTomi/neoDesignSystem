@@ -39,6 +39,7 @@ class ThemeConfig {
   final String? fontFamily;
   final double baseFontSize;
   final int? minFontWeightValue;
+  final bool highContrast;
 
   const ThemeConfig({
     required this.id,
@@ -75,6 +76,7 @@ class ThemeConfig {
     this.fontFamily,
     this.baseFontSize = 14.0,
     this.minFontWeightValue,
+    this.highContrast = false,
   });
 
   /// Creates a [ThemeConfig] from a [ThemePreset].
@@ -114,6 +116,7 @@ class ThemeConfig {
       fontFamily: preset.fontFamily,
       baseFontSize: preset.baseFontSize,
       minFontWeightValue: preset.minFontWeight?.value,
+      highContrast: preset.highContrast,
     );
   }
 
@@ -157,6 +160,7 @@ class ThemeConfig {
           ? FontWeight.values.where((w) => w.value == minFontWeightValue).firstOrNull
           : null,
       isBuiltIn: false,
+      highContrast: highContrast,
     );
   }
 
@@ -196,6 +200,7 @@ class ThemeConfig {
     if (fontFamily != null) 'fontFamily': fontFamily,
     'baseFontSize': baseFontSize,
     if (minFontWeightValue != null) 'minFontWeightValue': minFontWeightValue,
+    if (highContrast) 'highContrast': true,
   };
 
   /// Deserializes from JSON map.
@@ -235,6 +240,7 @@ class ThemeConfig {
       fontFamily: json['fontFamily'] as String?,
       baseFontSize: (json['baseFontSize'] as num?)?.toDouble() ?? 14.0,
       minFontWeightValue: json['minFontWeightValue'] as int?,
+      highContrast: json['highContrast'] as bool? ?? false,
     );
   }
 

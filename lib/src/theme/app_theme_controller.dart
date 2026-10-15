@@ -40,6 +40,9 @@ class AppThemeController extends ChangeNotifier {
   /// Active density preset (comfortable vs compact).
   DensityPreset get density => _currentPreset.density;
 
+  /// Whether high contrast mode is active.
+  bool get isHighContrast => _currentPreset.highContrast;
+
   /// The active ThemeMode (system, light, dark).
   ThemeMode get themeMode => _themeMode;
 
@@ -84,6 +87,18 @@ class AppThemeController extends ChangeNotifier {
     if (_currentPreset.density == density) return;
     _currentPreset = _currentPreset.copyWith(density: density);
     notifyListeners();
+  }
+
+  /// Toggle or set high contrast mode on the fly.
+  void setHighContrast(bool enabled) {
+    if (_currentPreset.highContrast == enabled) return;
+    _currentPreset = _currentPreset.copyWith(highContrast: enabled);
+    notifyListeners();
+  }
+
+  /// Toggle high contrast mode on the fly.
+  void toggleHighContrast() {
+    setHighContrast(!isHighContrast);
   }
 
   /// Update the light mode anchor color on the fly.
@@ -376,7 +391,10 @@ class AppThemeController extends ChangeNotifier {
   ThemePreset importPresetFromJson(String jsonString) => importPresetJson(jsonString);
 
   /// Builds a [ThemeData] for either light or dark mode based on the current preset.
-  ThemeData buildThemeData({required bool isDark}) {
-    return _currentPreset.toThemeData(isDark: isDark);
+  ThemeData buildThemeData({required bool isDark, bool? highContrast}) {
+    return _currentPreset.toThemeData(
+      isDark: isDark,
+      highContrast: highContrast,
+    );
   }
 }
