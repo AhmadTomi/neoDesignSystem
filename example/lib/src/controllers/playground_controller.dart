@@ -200,56 +200,56 @@ class PlaygroundController extends ChangeNotifier {
   void updateColor(Color newColor, {required ColorPickerTarget target, bool? isDark}) {
     switch (target) {
       case ColorPickerTarget.primary:
-        _primaryColor = newColor;
         if (isDark == true) {
           _darkPrimaryColor = newColor;
         } else if (isDark == false) {
           _lightPrimaryColor = newColor;
         } else {
+          _primaryColor = newColor;
           _darkPrimaryColor = null;
           _lightPrimaryColor = null;
         }
         break;
       case ColorPickerTarget.success:
-        _successColor = newColor;
         if (isDark == true) {
           _darkSuccessColor = newColor;
         } else if (isDark == false) {
           _lightSuccessColor = newColor;
         } else {
+          _successColor = newColor;
           _darkSuccessColor = null;
           _lightSuccessColor = null;
         }
         break;
       case ColorPickerTarget.warning:
-        _warningColor = newColor;
         if (isDark == true) {
           _darkWarningColor = newColor;
         } else if (isDark == false) {
           _lightWarningColor = newColor;
         } else {
+          _warningColor = newColor;
           _darkWarningColor = null;
           _lightWarningColor = null;
         }
         break;
       case ColorPickerTarget.error:
-        _errorColor = newColor;
         if (isDark == true) {
           _darkErrorColor = newColor;
         } else if (isDark == false) {
           _lightErrorColor = newColor;
         } else {
+          _errorColor = newColor;
           _darkErrorColor = null;
           _lightErrorColor = null;
         }
         break;
       case ColorPickerTarget.info:
-        _infoColor = newColor;
         if (isDark == true) {
           _darkInfoColor = newColor;
         } else if (isDark == false) {
           _lightInfoColor = newColor;
         } else {
+          _infoColor = newColor;
           _darkInfoColor = null;
           _lightInfoColor = null;
         }
@@ -302,7 +302,14 @@ class PlaygroundController extends ChangeNotifier {
       lightDividerColor: _lightDividerColor,
       whiteColor: _whiteColor,
       shape: _shape,
+      baseRadius: currentPreset.baseRadius,
       density: _density,
+      baseSpacing: currentPreset.baseSpacing,
+      fontFamily: currentPreset.fontFamily,
+      baseFontSize: currentPreset.baseFontSize,
+      minFontWeight: currentPreset.minFontWeight,
+      typography: currentPreset.typography,
+      themeModifier: currentPreset.themeModifier,
       highContrast: _highContrast,
     );
   }

@@ -99,10 +99,13 @@ class QuantityTextField extends StatefulWidget {
 }
 
 class _QuantityTextFieldState extends State<QuantityTextField> {
-  late final TextEditingController _textController;
+  late TextEditingController _textController;
   late FocusNode _focusNode;
-  late final bool _isInternalController;
-  late final bool _isInternalFocusNode;
+
+  /// Whether [_textController] / [_focusNode] were created by this state and
+  /// must therefore be disposed by it. Re-evaluated whenever the widget swaps them.
+  late bool _isInternalController;
+  late bool _isInternalFocusNode;
 
   late final NumberFormat _currencyFormat = NumberFormat.currency(
     locale: 'en_US',
@@ -158,11 +161,24 @@ class _QuantityTextFieldState extends State<QuantityTextField> {
   @override
   void didUpdateWidget(covariant QuantityTextField oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (widget.controller != oldWidget.controller) {
+      final previousText = _textController.text;
+      _textController.removeListener(_convertNum);
+      if (_isInternalController) {
+        _textController.dispose();
+      }
+      _isInternalController = widget.controller == null;
+      _textController =
+          widget.controller ?? TextEditingController(text: previousText);
+      _convertNum();
+      _textController.addListener(_convertNum);
+    }
     if (widget.focusNode != oldWidget.focusNode) {
       _focusNode.removeListener(_onFocusChanged);
       if (_isInternalFocusNode) {
         _focusNode.dispose();
       }
+      _isInternalFocusNode = widget.focusNode == null;
       _focusNode = widget.focusNode ?? FocusNode();
       _focusNode.addListener(_onFocusChanged);
     }

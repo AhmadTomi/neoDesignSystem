@@ -339,7 +339,7 @@ class AppThemeController extends ChangeNotifier {
 
   /// Save current configuration as a new custom preset.
   ThemePreset saveCustomPreset(String name, {String description = ''}) {
-    final newId = 'custom_${DateTime.now().millisecondsSinceEpoch}';
+    final newId = _uniqueCustomId();
     final custom = _currentPreset.copyWith(
       id: newId,
       name: name,
@@ -377,14 +377,41 @@ class AppThemeController extends ChangeNotifier {
   String exportCurrentPresetAsJson() => exportPresetJson();
 
   /// Imports a preset from a JSON string and activates it.
+  ///
+  /// Preset ids stay unique:
+  /// - If the id matches an existing custom preset, that preset is replaced in place.
+  /// - If the id matches a built-in preset, the imported preset gets a new `custom_` id
+  ///   so built-in presets are never shadowed.
   ThemePreset importPresetJson(String jsonString) {
-    final decoded = jsonDecode(jsonString) as Map<String, dynamic>;
+    final decoded = jsonDecode(jsonString);
+    if (decoded is! Map<String, dynamic>) {
+      throw const FormatException('Preset JSON must be an object.');
+    }
     final config = ThemeConfig.fromJson(decoded);
-    final preset = config.toPreset();
-    _customPresets.add(preset);
+    var preset = config.toPreset();
+
+    if (BuiltInPresets.all.any((p) => p.id == preset.id)) {
+      preset = preset.copyWith(id: _uniqueCustomId());
+    }
+
+    final existingIndex = _customPresets.indexWhere((p) => p.id == preset.id);
+    if (existingIndex != -1) {
+      _customPresets[existingIndex] = preset;
+    } else {
+      _customPresets.add(preset);
+    }
     _currentPreset = preset;
     notifyListeners();
     return preset;
+  }
+
+  String _uniqueCustomId() {
+    var candidate = 'custom_${DateTime.now().millisecondsSinceEpoch}';
+    var suffix = 1;
+    while (allPresets.any((p) => p.id == candidate)) {
+      candidate = 'custom_${DateTime.now().millisecondsSinceEpoch}_${suffix++}';
+    }
+    return candidate;
   }
 
   /// Alias for [importPresetJson].

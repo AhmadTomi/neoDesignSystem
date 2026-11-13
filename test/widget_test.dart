@@ -583,8 +583,14 @@ void main() {
       expect(jsonStr, contains('"shape": "sharp"'));
 
       // Import from JSON string
+      // Importing a preset whose id collides with a built-in gets a fresh custom id
+      // so the built-in is never duplicated or shadowed.
       final imported = controller.importPresetFromJson(jsonStr);
-      expect(imported.id, BuiltInPresets.emerald.id);
+      expect(imported.id, isNot(BuiltInPresets.emerald.id));
+      expect(imported.isBuiltIn, isFalse);
+      expect(imported.density, DensityPreset.compact);
+      expect(imported.shape, ShapePreset.sharp);
+      expect(controller.currentPreset.id, imported.id);
     });
 
     test('AppTypography scales dynamically and proportionally from baseFontSize', () {
