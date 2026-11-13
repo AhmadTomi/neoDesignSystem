@@ -318,6 +318,13 @@ class AppThemeController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Turns border blending on or off (see [ThemePreset.blendBorders]).
+  void setBlendBorders(bool enabled) {
+    if (_currentPreset.blendBorders == enabled) return;
+    _currentPreset = _currentPreset.copyWith(blendBorders: enabled);
+    notifyListeners();
+  }
+
   /// Set or update the default control height on the fly.
   /// Proportionally scales all control heights (xs, sm, md, lg).
   void setBaseControlHeight(double height) {

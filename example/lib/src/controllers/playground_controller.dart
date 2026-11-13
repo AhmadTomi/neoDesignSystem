@@ -306,6 +306,7 @@ class PlaygroundController extends ChangeNotifier {
       density: _density,
       baseSpacing: currentPreset.baseSpacing,
       baseControlHeight: currentPreset.baseControlHeight,
+      blendBorders: currentPreset.blendBorders,
       fontFamily: currentPreset.fontFamily,
       baseFontSize: currentPreset.baseFontSize,
       minFontWeight: currentPreset.minFontWeight,

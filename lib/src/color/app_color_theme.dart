@@ -79,6 +79,10 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
   final bool isDark;
   final bool highContrast;
 
+  /// When true, border tokens blend into the surface behind them so borders
+  /// keep their widgets but are not visible (see [ThemePreset.blendBorders]).
+  final bool blendBorders;
+
   // Layer specifications for the inspector
   final List<LayerSpec> specs;
 
@@ -113,6 +117,7 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
     this.hue = 0.0,
     this.isDark = false,
     this.highContrast = false,
+    this.blendBorders = false,
     this.specs = const [],
   });
 
@@ -124,10 +129,19 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
   Color get textMuted => textMain.withValues(alpha: highContrast ? 0.72 : 0.50);
 
   /// Garis redup samar - Hairline border, disabled outline (25% in high contrast, 8% standard)
-  Color get subtleBorder => textMain.withValues(alpha: highContrast ? 0.25 : 0.08);
+  /// Fully transparent when [blendBorders] is on, so the surface behind shows through.
+  Color get subtleBorder => textMain.withValues(
+        alpha: blendBorders ? 0.0 : (highContrast ? 0.25 : 0.08),
+      );
 
   /// Convenient semantic alias for [containerBorder].
   Color get border => containerBorder;
+
+  /// Use for borders drawn in an accent or status color (e.g. a green card
+  /// outline): returns [color] unchanged, or fully transparent when
+  /// [blendBorders] is on, so tinted borders blend like token borders.
+  Color accentBorder(Color color) =>
+      blendBorders ? color.withValues(alpha: 0) : color;
 
   /// Factory constructor that calculates tiered colors from a standard Flutter [Color].
   factory AppColorTheme.fromColor({
@@ -1214,6 +1228,7 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
     double? hue,
     bool? isDark,
     bool? highContrast,
+    bool? blendBorders,
     List<LayerSpec>? specs,
   }) {
     return AppColorTheme(
@@ -1247,6 +1262,7 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
       hue: hue ?? this.hue,
       isDark: isDark ?? this.isDark,
       highContrast: highContrast ?? this.highContrast,
+      blendBorders: blendBorders ?? this.blendBorders,
       specs: specs ?? this.specs,
     );
   }
@@ -1286,6 +1302,7 @@ class AppColorTheme extends ThemeExtension<AppColorTheme> {
       hue: hue + (other.hue - hue) * t,
       isDark: t < 0.5 ? isDark : other.isDark,
       highContrast: t < 0.5 ? highContrast : other.highContrast,
+      blendBorders: t < 0.5 ? blendBorders : other.blendBorders,
       specs: t < 0.5 ? specs : other.specs,
     );
   }

@@ -41,6 +41,7 @@ class ThemeConfig {
   final double baseFontSize;
   final int? minFontWeightValue;
   final bool highContrast;
+  final bool blendBorders;
 
   const ThemeConfig({
     required this.id,
@@ -79,6 +80,7 @@ class ThemeConfig {
     this.baseFontSize = 14.0,
     this.minFontWeightValue,
     this.highContrast = false,
+    this.blendBorders = false,
   });
 
   /// Creates a [ThemeConfig] from a [ThemePreset].
@@ -120,6 +122,7 @@ class ThemeConfig {
       baseFontSize: preset.baseFontSize,
       minFontWeightValue: preset.minFontWeight?.value,
       highContrast: preset.highContrast,
+      blendBorders: preset.blendBorders,
     );
   }
 
@@ -165,6 +168,7 @@ class ThemeConfig {
           : null,
       isBuiltIn: false,
       highContrast: highContrast,
+      blendBorders: blendBorders,
     );
   }
 
@@ -206,6 +210,8 @@ class ThemeConfig {
     'baseFontSize': baseFontSize,
     if (minFontWeightValue != null) 'minFontWeightValue': minFontWeightValue,
     if (highContrast) 'highContrast': true,
+    // Always written so readers can tell "off" from "not saved yet".
+    'blendBorders': blendBorders,
   };
 
   /// Deserializes from JSON map.
@@ -247,6 +253,7 @@ class ThemeConfig {
       baseFontSize: (json['baseFontSize'] as num?)?.toDouble() ?? 14.0,
       minFontWeightValue: json['minFontWeightValue'] as int?,
       highContrast: json['highContrast'] as bool? ?? false,
+      blendBorders: json['blendBorders'] as bool? ?? false,
     );
   }
 

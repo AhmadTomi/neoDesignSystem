@@ -123,6 +123,15 @@ class ThemePreset {
   /// Whether high-contrast mode is enabled (shifts OKLCH formulas to WCAG AAA standards).
   final bool highContrast;
 
+  /// Blends borders into their surfaces for a clean, borderless look while
+  /// keeping every border widget in place: field, container and hairline
+  /// border tokens become fully transparent, so whatever surface is behind
+  /// them shows through. Focus, error and divider colors are unchanged.
+  /// In dark mode the field fill sits three quarters of the way from
+  /// container1 to container2, so borderless fields look faintly recessed.
+  /// Ignored when high contrast is active, so contrast themes show every border.
+  final bool blendBorders;
+
   const ThemePreset({
     required this.id,
     required this.name,
@@ -163,6 +172,7 @@ class ThemePreset {
     this.themeModifier,
     this.isBuiltIn = false,
     this.highContrast = false,
+    this.blendBorders = false,
   });
 
   /// Builds a complete Flutter [ThemeData] with all token extensions registered.
@@ -171,7 +181,7 @@ class ThemePreset {
     final anchor = isDark ? darkAnchor : lightAnchor;
 
     // 1. Generate AppColorTheme
-    final colorTheme = AppColorTheme.fromColor(
+    final baseColorTheme = AppColorTheme.fromColor(
       anchorColor: anchor,
       isDark: isDark,
       highContrast: effectiveHighContrast,
@@ -198,6 +208,26 @@ class ThemePreset {
       lightDividerColor: lightDividerColor,
       whiteColor: whiteColor,
     );
+    final colorTheme = blendBorders && !effectiveHighContrast
+        ? baseColorTheme.copyWith(
+            blendBorders: true,
+            // Without a border a field is only its fill, so it must stand
+            // out from every panel. In dark mode the recessed fill sits right
+            // next to container2; use a point three quarters of the way from
+            // container1 to container2 so fields read as faintly recessed on
+            // container2/3 panels without turning black.
+            // The light fill is already darker than container2 and container3.
+            textFieldFill: isDark
+                ? Color.lerp(baseColorTheme.container1, baseColorTheme.container2, 0.75)!
+                : baseColorTheme.textFieldFill,
+            // Fully see-through: apps often give fields their own fill, so
+            // only a transparent border disappears on every surface.
+            textFieldBorder: baseColorTheme.textFieldFill.withValues(alpha: 0),
+            textFieldDisabledBorder:
+                baseColorTheme.textFieldDisabledFill.withValues(alpha: 0),
+            containerBorder: baseColorTheme.containerBorder.withValues(alpha: 0),
+          )
+        : baseColorTheme;
 
     // 2. Generate AppRadiusTheme
     final radiusTheme = AppRadiusTheme.create(
@@ -310,7 +340,7 @@ class ThemePreset {
           minimumSize: Size(0, controlSizeTheme.md),
           visualDensity: VisualDensity.standard,
           shape: RoundedRectangleBorder(borderRadius: radiusTheme.md.all),
-          side: BorderSide(color: colorTheme.textFieldBorder),
+          side: BorderSide(color: colorTheme.containerBorder),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
@@ -467,6 +497,7 @@ class ThemePreset {
     ThemeModifier? themeModifier,
     bool? isBuiltIn,
     bool? highContrast,
+    bool? blendBorders,
   }) {
     return ThemePreset(
       id: id ?? this.id,
@@ -508,6 +539,7 @@ class ThemePreset {
       themeModifier: themeModifier ?? this.themeModifier,
       isBuiltIn: isBuiltIn ?? this.isBuiltIn,
       highContrast: highContrast ?? this.highContrast,
+      blendBorders: blendBorders ?? this.blendBorders,
     );
   }
 }
