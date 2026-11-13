@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../color/app_color_theme.dart';
 import '../shape/app_radius_theme.dart';
+import '../size/app_control_size_theme.dart';
 import '../spacing/app_spacing_theme.dart';
 import '../typography/app_typography.dart';
 
@@ -9,12 +10,14 @@ class ThemeTokens {
   final AppColorTheme color;
   final AppRadiusTheme radius;
   final AppSpacingTheme spacing;
+  final AppControlSizeTheme controlSize;
   final AppTypography typography;
 
   const ThemeTokens({
     required this.color,
     required this.radius,
     required this.spacing,
+    this.controlSize = const AppControlSizeTheme(),
     required this.typography,
   });
 }

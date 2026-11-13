@@ -390,7 +390,8 @@ void main() {
       expect(theme.scaffoldBackgroundColor, isNotNull);
       final spacing = theme.extension<AppSpacingTheme>()!;
       expect(theme.inputDecorationTheme.isDense, true);
-      expect(theme.inputDecorationTheme.contentPadding, spacing.insetSquish);
+      // Vertical padding fills the 38px comfortable control height around a bodyLarge line.
+      expect(theme.inputDecorationTheme.contentPadding, EdgeInsets.symmetric(horizontal: spacing.insetSquish.left, vertical: 7.5));
       expect(theme.inputDecorationTheme.constraints, const BoxConstraints(minHeight: 38.0));
       expect(theme.inputDecorationTheme.prefixIconConstraints, const BoxConstraints(minWidth: 38, minHeight: 38));
       expect(theme.inputDecorationTheme.suffixIconConstraints, const BoxConstraints(minWidth: 38, minHeight: 38));
@@ -409,7 +410,10 @@ void main() {
       expect(themeLight.brightness, Brightness.light);
       expect(themeLight.extension<AppColorTheme>()?.primary, const Color(0xFF059669));
       expect(themeLight.inputDecorationTheme.isDense, true);
-      expect(themeLight.inputDecorationTheme.contentPadding, themeLight.extension<AppSpacingTheme>()?.insetSquish);
+      expect(
+        (themeLight.inputDecorationTheme.contentPadding as EdgeInsets).left,
+        themeLight.extension<AppSpacingTheme>()?.insetSquish.left,
+      );
       expect(themeLight.inputDecorationTheme.constraints, const BoxConstraints(minHeight: 30.0));
       expect(themeLight.inputDecorationTheme.prefixIconConstraints, const BoxConstraints(minWidth: 30, minHeight: 30));
       expect(themeLight.inputDecorationTheme.suffixIconConstraints, const BoxConstraints(minWidth: 30, minHeight: 30));

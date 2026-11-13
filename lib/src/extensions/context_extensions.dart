@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../color/app_color_theme.dart';
 import '../shape/app_radius_theme.dart';
+import '../size/app_control_size_theme.dart';
 import '../spacing/app_spacing_theme.dart';
 
 /// Convenient extension getters on [BuildContext] for instant design token access.
@@ -29,6 +30,10 @@ extension DesignTokensContext on BuildContext {
   /// Active [AppSpacingTheme] instance (insets, gaps, and SizedBox helpers).
   AppSpacingTheme get spacing =>
       Theme.of(this).extension<AppSpacingTheme>() ?? AppSpacingTheme.comfortable();
+
+  /// Active [AppControlSizeTheme] instance (heights of buttons, fields, tabs).
+  AppControlSizeTheme get controlSize =>
+      Theme.of(this).extension<AppControlSizeTheme>() ?? const AppControlSizeTheme();
 
   /// Shortcut to active [TextTheme].
   TextTheme get text => Theme.of(this).textTheme;

@@ -13,6 +13,7 @@ export 'src/color/layer_spec.dart';
 export 'src/color/oklch_color.dart';
 export 'src/extensions/context_extensions.dart';
 export 'src/shape/app_radius_theme.dart';
+export 'src/size/app_control_size_theme.dart';
 export 'src/spacing/app_spacing_theme.dart';
 export 'src/theme/app_theme_controller.dart';
 export 'src/theme/theme_config.dart';

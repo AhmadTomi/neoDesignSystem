@@ -36,6 +36,7 @@ class ThemeConfig {
   final double? baseRadius;
   final String density;
   final double? baseSpacing;
+  final double? baseControlHeight;
   final String? fontFamily;
   final double baseFontSize;
   final int? minFontWeightValue;
@@ -73,6 +74,7 @@ class ThemeConfig {
     this.baseRadius,
     required this.density,
     this.baseSpacing,
+    this.baseControlHeight,
     this.fontFamily,
     this.baseFontSize = 14.0,
     this.minFontWeightValue,
@@ -113,6 +115,7 @@ class ThemeConfig {
       baseRadius: preset.baseRadius,
       density: preset.density == DensityPreset.compact ? 'compact' : 'comfortable',
       baseSpacing: preset.baseSpacing,
+      baseControlHeight: preset.baseControlHeight,
       fontFamily: preset.fontFamily,
       baseFontSize: preset.baseFontSize,
       minFontWeightValue: preset.minFontWeight?.value,
@@ -154,6 +157,7 @@ class ThemeConfig {
       baseRadius: baseRadius,
       density: density == 'compact' ? DensityPreset.compact : DensityPreset.comfortable,
       baseSpacing: baseSpacing,
+      baseControlHeight: baseControlHeight,
       fontFamily: fontFamily,
       baseFontSize: baseFontSize,
       minFontWeight: minFontWeightValue != null
@@ -197,6 +201,7 @@ class ThemeConfig {
     if (baseRadius != null) 'baseRadius': baseRadius,
     'density': density,
     if (baseSpacing != null) 'baseSpacing': baseSpacing,
+    if (baseControlHeight != null) 'baseControlHeight': baseControlHeight,
     if (fontFamily != null) 'fontFamily': fontFamily,
     'baseFontSize': baseFontSize,
     if (minFontWeightValue != null) 'minFontWeightValue': minFontWeightValue,
@@ -237,6 +242,7 @@ class ThemeConfig {
       baseRadius: (json['baseRadius'] as num?)?.toDouble(),
       density: json['density'] as String? ?? 'comfortable',
       baseSpacing: (json['baseSpacing'] as num?)?.toDouble(),
+      baseControlHeight: (json['baseControlHeight'] as num?)?.toDouble(),
       fontFamily: json['fontFamily'] as String?,
       baseFontSize: (json['baseFontSize'] as num?)?.toDouble() ?? 14.0,
       minFontWeightValue: json['minFontWeightValue'] as int?,

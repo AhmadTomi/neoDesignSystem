@@ -318,6 +318,14 @@ class AppThemeController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Set or update the default control height on the fly.
+  /// Proportionally scales all control heights (xs, sm, md, lg).
+  void setBaseControlHeight(double height) {
+    if (_currentPreset.baseControlHeight == height) return;
+    _currentPreset = _currentPreset.copyWith(baseControlHeight: height);
+    notifyListeners();
+  }
+
   /// Set or update the base font size on the fly.
   void setBaseFontSize(double size) {
     if (_currentPreset.baseFontSize == size) return;

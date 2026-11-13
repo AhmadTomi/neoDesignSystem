@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../color/app_color_theme.dart';
 import '../shape/app_radius_theme.dart';
+import '../size/app_control_size_theme.dart';
 import '../spacing/app_spacing_theme.dart';
 import '../typography/app_typography.dart';
 import 'theme_tokens.dart';
@@ -96,6 +97,10 @@ class ThemePreset {
   /// Optional base spacing anchor (default 16.0 for comfortable, 10.0 for compact).
   final double? baseSpacing;
 
+  /// Optional default control height anchor ([AppControlSizeTheme.md]).
+  /// Defaults to 30.0 for compact and 38.0 for comfortable density.
+  final double? baseControlHeight;
+
   /// Optional custom font family (defaults to 'Inter').
   final String? fontFamily;
 
@@ -150,6 +155,7 @@ class ThemePreset {
     this.baseRadius,
     this.density = DensityPreset.comfortable,
     this.baseSpacing,
+    this.baseControlHeight,
     this.fontFamily,
     this.baseFontSize = 14.0,
     this.minFontWeight,
@@ -204,6 +210,10 @@ class ThemePreset {
       baseSpacing: baseSpacing ?? (density == DensityPreset.compact ? 10.0 : 16.0),
       density: density,
     );
+    final controlSizeTheme = AppControlSizeTheme.create(
+      baseControlHeight: baseControlHeight,
+      density: density,
+    );
 
     // 4. Generate Typography
     final typographyTheme = typography ??
@@ -219,6 +229,7 @@ class ThemePreset {
       color: colorTheme,
       radius: radiusTheme,
       spacing: spacingTheme,
+      controlSize: controlSizeTheme,
       typography: typographyTheme,
     );
 
@@ -250,6 +261,7 @@ class ThemePreset {
         colorTheme,
         radiusTheme,
         spacingTheme,
+        controlSizeTheme,
       ],
       // Standard Component Theme Defaults using Token instances
       cardTheme: CardThemeData(
@@ -278,25 +290,62 @@ class ThemePreset {
           backgroundColor: colorTheme.primary,
           foregroundColor: colorTheme.onPrimary,
           padding: spacingTheme.insetSquish,
+          minimumSize: Size(0, controlSizeTheme.md),
+          visualDensity: VisualDensity.standard,
           shape: RoundedRectangleBorder(borderRadius: radiusTheme.md.all),
           elevation: 0,
         ),
       ),
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          padding: spacingTheme.insetSquish,
+          minimumSize: Size(0, controlSizeTheme.md),
+          visualDensity: VisualDensity.standard,
+          shape: RoundedRectangleBorder(borderRadius: radiusTheme.md.all),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          padding: spacingTheme.insetSquish,
+          minimumSize: Size(0, controlSizeTheme.md),
+          visualDensity: VisualDensity.standard,
+          shape: RoundedRectangleBorder(borderRadius: radiusTheme.md.all),
+          side: BorderSide(color: colorTheme.textFieldBorder),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          padding: spacingTheme.insetSquish,
+          minimumSize: Size(0, controlSizeTheme.md),
+          visualDensity: VisualDensity.standard,
+          shape: RoundedRectangleBorder(borderRadius: radiusTheme.md.all),
+        ),
+      ),
       inputDecorationTheme: InputDecorationTheme(
         isDense: true,
+        // Control heights come from AppControlSizeTheme; stop desktop's default
+        // VisualDensity.compact from shaving 8px off every field.
+        visualDensity: VisualDensity.standard,
         filled: true,
         fillColor: colorTheme.textFieldFill,
-        contentPadding: spacingTheme.insetSquish,
+        // Padding is sized so the text line plus padding fills controlSize.md:
+        // a dense field paints its border around its content, not minHeight.
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: spacingTheme.insetSquish.left,
+          vertical: controlSizeTheme.fieldVerticalPadding(
+            typographyTheme.bodyLg.fontSize! * (typographyTheme.bodyLg.height ?? 1.2),
+          ),
+        ),
         constraints: BoxConstraints(
-          minHeight: density == DensityPreset.compact ? 30.0 : 38.0,
+          minHeight: controlSizeTheme.md,
         ),
         prefixIconConstraints: BoxConstraints(
-          minWidth: density == DensityPreset.compact ? 30.0 : 38.0,
-          minHeight: density == DensityPreset.compact ? 30.0 : 38.0,
+          minWidth: controlSizeTheme.md,
+          minHeight: controlSizeTheme.md,
         ),
         suffixIconConstraints: BoxConstraints(
-          minWidth: density == DensityPreset.compact ? 30.0 : 38.0,
-          minHeight: density == DensityPreset.compact ? 30.0 : 38.0,
+          minWidth: controlSizeTheme.md,
+          minHeight: controlSizeTheme.md,
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: radiusTheme.md.all,
@@ -409,6 +458,7 @@ class ThemePreset {
     double? baseRadius,
     DensityPreset? density,
     double? baseSpacing,
+    double? baseControlHeight,
     String? fontFamily,
     double? baseFontSize,
     FontWeight? minFontWeight,
@@ -450,6 +500,7 @@ class ThemePreset {
       baseRadius: baseRadius ?? this.baseRadius,
       density: density ?? this.density,
       baseSpacing: baseSpacing ?? this.baseSpacing,
+      baseControlHeight: baseControlHeight ?? this.baseControlHeight,
       fontFamily: fontFamily ?? this.fontFamily,
       baseFontSize: baseFontSize ?? this.baseFontSize,
       minFontWeight: clearMinFontWeight ? null : (minFontWeight ?? this.minFontWeight),
