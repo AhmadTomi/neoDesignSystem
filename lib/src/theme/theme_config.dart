@@ -28,6 +28,9 @@ class ThemeConfig {
   final String? borderHex;
   final String? darkBorderHex;
   final String? lightBorderHex;
+  final String? fieldBorderHex;
+  final String? darkFieldBorderHex;
+  final String? lightFieldBorderHex;
   final String? dividerHex;
   final String? darkDividerHex;
   final String? lightDividerHex;
@@ -67,6 +70,9 @@ class ThemeConfig {
     this.borderHex,
     this.darkBorderHex,
     this.lightBorderHex,
+    this.fieldBorderHex,
+    this.darkFieldBorderHex,
+    this.lightFieldBorderHex,
     this.dividerHex,
     this.darkDividerHex,
     this.lightDividerHex,
@@ -109,6 +115,9 @@ class ThemeConfig {
       borderHex: preset.borderColor != null ? _colorToHex(preset.borderColor!) : null,
       darkBorderHex: preset.darkBorderColor != null ? _colorToHex(preset.darkBorderColor!) : null,
       lightBorderHex: preset.lightBorderColor != null ? _colorToHex(preset.lightBorderColor!) : null,
+      fieldBorderHex: preset.fieldBorderColor != null ? _colorToHex(preset.fieldBorderColor!) : null,
+      darkFieldBorderHex: preset.darkFieldBorderColor != null ? _colorToHex(preset.darkFieldBorderColor!) : null,
+      lightFieldBorderHex: preset.lightFieldBorderColor != null ? _colorToHex(preset.lightFieldBorderColor!) : null,
       dividerHex: preset.dividerColor != null ? _colorToHex(preset.dividerColor!) : null,
       darkDividerHex: preset.darkDividerColor != null ? _colorToHex(preset.darkDividerColor!) : null,
       lightDividerHex: preset.lightDividerColor != null ? _colorToHex(preset.lightDividerColor!) : null,
@@ -152,6 +161,9 @@ class ThemeConfig {
       borderColor: borderHex != null ? _parseHex(borderHex!) : null,
       darkBorderColor: darkBorderHex != null ? _parseHex(darkBorderHex!) : null,
       lightBorderColor: lightBorderHex != null ? _parseHex(lightBorderHex!) : null,
+      fieldBorderColor: fieldBorderHex != null ? _parseHex(fieldBorderHex!) : null,
+      darkFieldBorderColor: darkFieldBorderHex != null ? _parseHex(darkFieldBorderHex!) : null,
+      lightFieldBorderColor: lightFieldBorderHex != null ? _parseHex(lightFieldBorderHex!) : null,
       dividerColor: dividerHex != null ? _parseHex(dividerHex!) : null,
       darkDividerColor: darkDividerHex != null ? _parseHex(darkDividerHex!) : null,
       lightDividerColor: lightDividerHex != null ? _parseHex(lightDividerHex!) : null,
@@ -197,6 +209,9 @@ class ThemeConfig {
     if (borderHex != null) 'borderHex': borderHex,
     if (darkBorderHex != null) 'darkBorderHex': darkBorderHex,
     if (lightBorderHex != null) 'lightBorderHex': lightBorderHex,
+    if (fieldBorderHex != null) 'fieldBorderHex': fieldBorderHex,
+    if (darkFieldBorderHex != null) 'darkFieldBorderHex': darkFieldBorderHex,
+    if (lightFieldBorderHex != null) 'lightFieldBorderHex': lightFieldBorderHex,
     if (dividerHex != null) 'dividerHex': dividerHex,
     if (darkDividerHex != null) 'darkDividerHex': darkDividerHex,
     if (lightDividerHex != null) 'lightDividerHex': lightDividerHex,
@@ -240,6 +255,9 @@ class ThemeConfig {
       borderHex: json['borderHex'] as String?,
       darkBorderHex: json['darkBorderHex'] as String?,
       lightBorderHex: json['lightBorderHex'] as String?,
+      fieldBorderHex: json['fieldBorderHex'] as String?,
+      darkFieldBorderHex: json['darkFieldBorderHex'] as String?,
+      lightFieldBorderHex: json['lightFieldBorderHex'] as String?,
       dividerHex: json['dividerHex'] as String?,
       darkDividerHex: json['darkDividerHex'] as String?,
       lightDividerHex: json['lightDividerHex'] as String?,

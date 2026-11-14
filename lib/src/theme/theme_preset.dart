@@ -72,6 +72,16 @@ class ThemePreset {
   /// Optional exact light mode override for border color.
   final Color? lightBorderColor;
 
+  /// Optional exact override for text field borders (`textFieldBorder`),
+  /// e.g. to match [borderColor]. By default it is derived from the anchor.
+  final Color? fieldBorderColor;
+
+  /// Optional exact dark mode override for text field borders.
+  final Color? darkFieldBorderColor;
+
+  /// Optional exact light mode override for text field borders.
+  final Color? lightFieldBorderColor;
+
   /// Optional custom divider color override.
   final Color? dividerColor;
 
@@ -156,6 +166,9 @@ class ThemePreset {
     this.borderColor,
     this.darkBorderColor,
     this.lightBorderColor,
+    this.fieldBorderColor,
+    this.darkFieldBorderColor,
+    this.lightFieldBorderColor,
     this.dividerColor,
     this.darkDividerColor,
     this.lightDividerColor,
@@ -181,7 +194,7 @@ class ThemePreset {
     final anchor = isDark ? darkAnchor : lightAnchor;
 
     // 1. Generate AppColorTheme
-    final baseColorTheme = AppColorTheme.fromColor(
+    final generatedColorTheme = AppColorTheme.fromColor(
       anchorColor: anchor,
       isDark: isDark,
       highContrast: effectiveHighContrast,
@@ -208,6 +221,11 @@ class ThemePreset {
       lightDividerColor: lightDividerColor,
       whiteColor: whiteColor,
     );
+    final fieldBorderOverride =
+        (isDark ? darkFieldBorderColor : lightFieldBorderColor) ?? fieldBorderColor;
+    final baseColorTheme = fieldBorderOverride == null
+        ? generatedColorTheme
+        : generatedColorTheme.copyWith(textFieldBorder: fieldBorderOverride);
     final colorTheme = blendBorders && !effectiveHighContrast
         ? baseColorTheme.copyWith(
             blendBorders: true,
@@ -463,6 +481,9 @@ class ThemePreset {
     Color? borderColor,
     Color? darkBorderColor,
     Color? lightBorderColor,
+    Color? fieldBorderColor,
+    Color? darkFieldBorderColor,
+    Color? lightFieldBorderColor,
     Color? dividerColor,
     Color? darkDividerColor,
     Color? lightDividerColor,
@@ -480,6 +501,9 @@ class ThemePreset {
     bool clearBorderColor = false,
     bool clearDarkBorderColor = false,
     bool clearLightBorderColor = false,
+    bool clearFieldBorderColor = false,
+    bool clearDarkFieldBorderColor = false,
+    bool clearLightFieldBorderColor = false,
     bool clearDividerColor = false,
     bool clearDarkDividerColor = false,
     bool clearLightDividerColor = false,
@@ -523,6 +547,11 @@ class ThemePreset {
       borderColor: clearBorderColor ? null : (borderColor ?? this.borderColor),
       darkBorderColor: clearDarkBorderColor ? null : (darkBorderColor ?? this.darkBorderColor),
       lightBorderColor: clearLightBorderColor ? null : (lightBorderColor ?? this.lightBorderColor),
+      fieldBorderColor: clearFieldBorderColor ? null : (fieldBorderColor ?? this.fieldBorderColor),
+      darkFieldBorderColor:
+          clearDarkFieldBorderColor ? null : (darkFieldBorderColor ?? this.darkFieldBorderColor),
+      lightFieldBorderColor:
+          clearLightFieldBorderColor ? null : (lightFieldBorderColor ?? this.lightFieldBorderColor),
       dividerColor: clearDividerColor ? null : (dividerColor ?? this.dividerColor),
       darkDividerColor: clearDarkDividerColor ? null : (darkDividerColor ?? this.darkDividerColor),
       lightDividerColor: clearLightDividerColor ? null : (lightDividerColor ?? this.lightDividerColor),
