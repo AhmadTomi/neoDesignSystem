@@ -9,6 +9,7 @@
 library;
 
 export 'src/color/app_color_theme.dart';
+export 'src/color/color_adjust_extensions.dart';
 export 'src/color/layer_spec.dart';
 export 'src/color/oklch_color.dart';
 export 'src/extensions/context_extensions.dart';

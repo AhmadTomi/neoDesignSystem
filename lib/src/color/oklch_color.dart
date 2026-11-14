@@ -17,6 +17,57 @@ class OklchColor {
 
   const OklchColor(this.l, this.c, this.h);
 
+  /// Linear sRGB channels for this color, without clamping.
+  ({double r, double g, double b}) _toLinearSrgb() {
+    final hRad = h * (math.pi / 180.0);
+    final a = c * math.cos(hRad);
+    final b = c * math.sin(hRad);
+    final l_ = l + 0.3963377774 * a + 0.2158037573 * b;
+    final m_ = l - 0.1055613458 * a - 0.0638541728 * b;
+    final s_ = l - 0.0894841775 * a - 1.2914855480 * b;
+    final lLin = l_ * l_ * l_;
+    final mLin = m_ * m_ * m_;
+    final sLin = s_ * s_ * s_;
+    return (
+      r: 4.0767416621 * lLin - 3.3077115913 * mLin + 0.2309699292 * sLin,
+      g: -1.2684380046 * lLin + 2.6097574011 * mLin - 0.3413193965 * sLin,
+      b: -0.0041960863 * lLin - 0.7034186147 * mLin + 1.7076147010 * sLin,
+    );
+  }
+
+  /// Whether this color can be shown in sRGB without clipping a channel.
+  bool get isInGamut {
+    const eps = 1e-4;
+    final rgb = _toLinearSrgb();
+    return rgb.r >= -eps && rgb.r <= 1 + eps &&
+        rgb.g >= -eps && rgb.g <= 1 + eps &&
+        rgb.b >= -eps && rgb.b <= 1 + eps;
+  }
+
+  /// Returns a copy with chroma reduced just enough to fit in sRGB, keeping
+  /// lightness and hue. Plain [toColor] clips channels instead, which can
+  /// shift the hue of very saturated colors.
+  OklchColor toGamut() {
+    // Pure black and white have no chroma.
+    if (l <= 0.0 || l >= 1.0) return OklchColor(l.clamp(0.0, 1.0), 0.0, h);
+    if (isInGamut) return this;
+    var low = 0.0;
+    var high = c;
+    for (var i = 0; i < 20; i++) {
+      final mid = (low + high) / 2;
+      if (OklchColor(l, mid, h).isInGamut) {
+        low = mid;
+      } else {
+        high = mid;
+      }
+    }
+    return OklchColor(l, low, h);
+  }
+
+  /// Copy with the given components replaced.
+  OklchColor copyWith({double? l, double? c, double? h}) =>
+      OklchColor(l ?? this.l, c ?? this.c, h ?? this.h);
+
   /// Converts OKLCH to a Flutter [Color] with the given [alpha] (0.0 to 1.0).
   Color toColor({double alpha = 1.0}) {
     // 1. OKLCH to OKLab
